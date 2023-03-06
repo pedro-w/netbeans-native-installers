@@ -395,7 +395,6 @@ void searchCurrentJavaRegistry(LauncherProperties * props, BOOL access64key) {
     HKEY rootKeys [2] = {HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER};
     DWORD rootKeysNumber = sizeof(rootKeys)/sizeof(HKEY);
     DWORD keysNumber = sizeof(JAVA_REGISTRY_KEYS)/sizeof(WCHAR*);
-    DWORD status = ERROR_OK;
     
     writeMessageA(props, OUTPUT_LEVEL_NORMAL, 0, "Search java in CurrentVersion values...", 1);
     
@@ -455,7 +454,6 @@ void searchCurrentJavaRegistry(LauncherProperties * props, BOOL access64key) {
                         err = RegEnumKeyExW(hkey, index, buffer, &size, NULL, NULL, NULL, NULL);
                         if (err == ERROR_SUCCESS) {
                             WCHAR  * javaHome = getJavaHomeValue(keys[i], buffer, access64key);
-                            status = ERROR_OK;
                             
                             writeMessageA(props, OUTPUT_LEVEL_NORMAL, 0, (rootKeys[k]==HKEY_LOCAL_MACHINE) ? "HKEY_LOCAL_MACHINE" : "HKEY_CURRENT_USER", 0);
                             writeMessageA(props, OUTPUT_LEVEL_NORMAL, 0, "\\", 0);
@@ -531,7 +529,6 @@ void searchJavaFromEnvVariables(LauncherProperties * props) {
 void unpackJars(LauncherProperties * props, WCHAR * jvmDir, WCHAR * startDir, WCHAR * unpack200exe) {
     DWORD attrs;
     DWORD dwError;
-    DWORD count = 0 ;
     
     if(!isOK(props)) return;
     attrs = GetFileAttributesW(startDir);
@@ -686,10 +683,10 @@ void searchJavaInstallationFolder(LauncherProperties * props) {
     GetModuleFileName(0, executablePath, MAX_PATH);
     char * pch = strrchr(executablePath, '\\');    
     char installationFolder [MAX_PATH]= "";
-    int i = 0;
+    int i;
     int end = (int) (pch - executablePath);
     printf("%i", end);
-    for(i; i < end; i++) {
+    for(i = 0; i < end; i++) {
         installationFolder[i] = executablePath[i];
     }
     strcat(installationFolder, "\\bin\\jre");

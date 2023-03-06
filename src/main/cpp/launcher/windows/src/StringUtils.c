@@ -320,6 +320,7 @@ WCHAR * escapeString(const WCHAR * string) {
                     result[r++] = '\\';
                     bsCounter--;
                 } while(bsCounter>0);
+		break;
             default:
                 bsCounter = 0;                
                 break;

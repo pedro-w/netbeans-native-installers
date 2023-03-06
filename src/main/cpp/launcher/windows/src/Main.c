@@ -103,8 +103,6 @@ void initMainWindow(LauncherProperties * props, HINSTANCE hInstance) {
 void initErrorTitleWindow(LauncherProperties *props, HINSTANCE hInstance) {
     if(!isSilent(props)) {
         RECT rcClient;
-        int cyVScroll;
-        cyVScroll = GetSystemMetrics(SM_CYVSCROLL);
         GetClientRect(hwndMain, &rcClient);
         hwndErrorTitle = CreateWindowExW(0,  WC_STATICW,  WC_STATICW, WS_CHILD,
                 rcClient.left + 10,  15, rcClient.right - 20, 20, hwndMain, NULL, hInstance, NULL);
@@ -128,8 +126,6 @@ void initErrorTitleWindow(LauncherProperties *props, HINSTANCE hInstance) {
 void initErrorDetailWindow(LauncherProperties *props, HINSTANCE hInstance) {
     if(!isSilent(props)) {
         RECT rcClient;
-        int cyVScroll;
-        cyVScroll = GetSystemMetrics(SM_CYVSCROLL);
         GetClientRect(hwndMain, &rcClient);
         hwndErrorDetail = CreateWindowExW(0,  WC_STATICW,  WC_STATICW, WS_CHILD  ,
                 rcClient.left + 10,  40, rcClient.right - 20, 80,
@@ -587,6 +583,7 @@ void createLauncherThread(LauncherProperties *props) {
 }
 
 DWORD createGui(LauncherProperties* props, HINSTANCE hInstance, HINSTANCE hi, int nCmdShow) {
+    (void) hi;
     if (!InitApplication(props, hInstance)) {
         SetEvent(initializationFailed);
         return 0;

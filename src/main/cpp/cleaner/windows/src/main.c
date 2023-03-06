@@ -426,7 +426,10 @@ void changeCurrentDirectory() {
 #define MAXIMUM_THREADS MAXIMUM_WAIT_OBJECTS
 
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hi, PSTR pszCmdLine, int nCmdShow) {
-//int main(void) {
+    UNREFERENCED_PARAMETER(hInstance);
+    UNREFERENCED_PARAMETER(hi);
+    UNREFERENCED_PARAMETER(pszCmdLine);
+    UNREFERENCED_PARAMETER(nCmdShow);
     int argumentsNumber = 0;
     DWORD i=0;
     DWORD  threadCounter = 0;

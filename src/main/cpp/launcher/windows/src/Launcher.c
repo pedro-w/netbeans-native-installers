@@ -479,8 +479,7 @@ void resolveString(LauncherProperties * props, WCHAR ** result) {
 }
 
 void resolvePath(LauncherProperties * props, LauncherResource * file) {
-    WCHAR * result = NULL;
-    DWORD i=0;
+    DWORD i;
     
     if(file==NULL) return;
     if(file->resolved!=NULL) return;
