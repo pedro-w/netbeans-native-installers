@@ -94,6 +94,7 @@ extern const char * MAIN_WINDOW_TITLE;
     
     void freeStringList(StringListEntry **s);
     StringListEntry * addStringToList(StringListEntry * top, WCHAR * str);
+    StringListEntry * splitStringToList(StringListEntry * top, WCHAR * str, WCHAR sep);
     DWORD inList(StringListEntry * top, WCHAR * str);
     
     char *toChar(const WCHAR * string);

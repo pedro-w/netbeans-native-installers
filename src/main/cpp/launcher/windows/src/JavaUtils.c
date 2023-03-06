@@ -36,6 +36,7 @@ const WCHAR * UNPACK200_EXE_SUFFIX = L"\\bin\\unpack200.exe";
 const WCHAR * JAVA_LIB_SUFFIX = L"\\lib";
 const WCHAR * PACK_GZ_SUFFIX  = L".pack.gz";
 const WCHAR * JAR_PACK_GZ_SUFFIX = L".jar.pack.gz";
+const WCHAR * PATH_ENV = L"PATH";
 
 const DWORD JVM_EXTRACTION_TIMEOUT = 180000;  //180sec
 
@@ -734,6 +735,34 @@ void searchJavaSystemLocations(LauncherProperties * props) {
         }        
     }
 }
+static void searchJavaOnPath(LauncherProperties * props) {
+  // Find the correct size first, then allocate
+  DWORD size = GetEnvironmentVariableW(PATH_ENV, NULL, 0);
+  WCHAR * str = newpWCHAR(size);
+  GetEnvironmentVariableW(PATH_ENV, str, size);
+  StringListEntry * list = splitStringToList(NULL, str, L';');
+  StringListEntry * iter = list;
+  while (iter) {
+    // Quickly check for java.exe ...
+    WCHAR * javaExecutable = appendStringW(NULL, iter->string);
+    javaExecutable = appendStringW(javaExecutable, L"\\java.exe");
+    if (fileExists(javaExecutable)) {
+      // ... then check properly with trySetCompatibleJava
+      WCHAR* msg = appendStringW(NULL, L"A potential path is ");
+      msg = appendStringW(msg, iter->string);
+      writeMessageW(props, OUTPUT_LEVEL_NORMAL, 0, msg, 1);
+      WCHAR * javaHome = getParentDirectory(iter->string);
+      trySetCompatibleJava(javaHome, props);
+      FREE(javaHome);
+      FREE(msg);
+    }
+    FREE(javaExecutable);
+    iter = iter->next;
+  }
+  freeStringList(&list);
+  FREE(str);
+}
+
 void findSystemJava(LauncherProperties *props) {
     // install bundled JVMs if any
     if(isTerminated(props)) return;
@@ -756,7 +785,12 @@ void findSystemJava(LauncherProperties *props) {
         writeMessageA(props, OUTPUT_LEVEL_NORMAL, 0, "Search java in environment variables", 1);
         searchJavaFromEnvVariables(props);
     }
-    
+
+    if (isTerminated(props)) return;
+    if (props->java == NULL) {
+      writeMessageA(props, OUTPUT_LEVEL_NORMAL, 0, "Search java in executable paths", 1);
+      searchJavaOnPath(props);
+    }
     // search JVM in the registry
     if(isTerminated(props)) return;
     if(props->java==NULL) {        
