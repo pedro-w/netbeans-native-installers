@@ -18,6 +18,21 @@
 TMPFLD = ../../../../../target/tmp/
 OFLD = ../../../../../target/launcher/
 
+CC=i686-w64-mingw32-gcc
+RC=i686-w64-mingw32-windres
+CFLAGS=-Os -s -DARCHITECTURE=32 -W -Wall -Wl,--nxcompat -Wl,--dynamicbase \
+	   -Wl,--no-seh -Wl,--no-insert-timestamp -mwindows
+LDFLAGS=-static -static-libstdc++ -static-libgcc
+LDLIBS=-lstdc++ -lcomctl32 -luserenv
+
+SRCS=src/Main.c src/Launcher.c src/ExtractUtils.c src/FileUtils.c \
+     src/SystemUtils.c src/RegistryUtils.c src/ProcessUtils.c \
+     src/JavaUtils.c src/StringUtils.c
+
+INCS=src/Errors.h src/JavaUtils.h src/ProcessUtils.h src/SystemUtils.h \
+     src/ExtractUtils.h src/Launcher.h src/RegistryUtils.h src/Types.h \
+     src/FileUtils.h src/Main.h src/StringUtils.h
+
 all: prepfolder nlw.exe
 
 prepfolder:
@@ -25,11 +40,12 @@ prepfolder:
 	mkdir -p $(OFLD)
 
 clean:
-	rm -f *.res *.exe *.dll
+	-rm -f $(TMPFLD)nlw.res $(OFLD)nlw.exe
 
-nlw.res: resources/res.rc
-	i686-w64-mingw32-windres -o$(TMPFLD)nlw.res -Ocoff resources/res.rc
+$(TMPFLD)nlw.res: resources/res.rc
+	$(RC) -o$@ -Ocoff $<
 
+nlw.exe: $(OFLD)nlw.exe
 
-nlw.exe: nlw.res
-	i686-w64-mingw32-gcc -s -DARCHITECTURE=32 -Wl,--nxcompat -Wl,--dynamicbase -Wl,--no-seh -Wl,--no-insert-timestamp -mwindows src/Main.c src/Launcher.c src/ExtractUtils.c src/FileUtils.c src/SystemUtils.c src/RegistryUtils.c src/ProcessUtils.c src/JavaUtils.c src/StringUtils.c -o$(OFLD)nlw.exe -static -lstdc++ -lcomctl32 -luserenv -static-libstdc++ -static-libgcc
+$(OFLD)nlw.exe: $(TMPFLD)nlw.res $(SRCS) $(INCS)
+	$(LINK.c) $(SRCS) -o$@ $(LDLIBS)
