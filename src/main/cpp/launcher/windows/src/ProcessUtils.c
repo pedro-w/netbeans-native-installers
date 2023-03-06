@@ -28,21 +28,20 @@ DWORD readBuf(HANDLE hRead, WCHAR * buf, DWORD * bytesRead, HANDLE hWrite) {
     ReadFile(hRead, buf, STREAM_BUF_LENGTH - 1, bytesRead, NULL);
     
     if((*bytesRead)>0 && hWrite!=INVALID_HANDLE_VALUE) {
-        DWORD bytesWritten = 0;
-        WriteFile(hWrite, buf, (*bytesRead), &bytesWritten, 0);
+        WriteFile(hWrite, buf, (*bytesRead), NULL, 0);
     }
-    ZERO(buf, sizeof(buf));
+    ZERO(buf, STREAM_BUF_LENGTH);
     return 0;
 }
 
 DWORD readNextData(HANDLE hRead, WCHAR * buf, HANDLE hWrite) {
     DWORD bytesRead;
     DWORD bytesAvailable;
-    ZERO(buf, sizeof(buf));
+    ZERO(buf, STREAM_BUF_LENGTH);
     
     PeekNamedPipe(hRead, buf, STREAM_BUF_LENGTH - 1, &bytesRead, &bytesAvailable, NULL);
     if (bytesRead != 0) {
-        ZERO(buf, sizeof(buf));
+        ZERO(buf, STREAM_BUF_LENGTH);
         if (bytesAvailable >= STREAM_BUF_LENGTH) {
             while (bytesRead >= STREAM_BUF_LENGTH-1) {
                 readBuf(hRead, buf, &bytesRead, hWrite);
