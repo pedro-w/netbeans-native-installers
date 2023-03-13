@@ -80,8 +80,9 @@ typedef struct _WCHARList TCHARList;
 #else
 typedef struct _charList TCHARList;
 #endif
+// This is a byte-buffer:
 typedef struct _string {
-  TCHAR *bytes;
+  BYTE *bytes;
   DWORD length;
 } SizedString;
 

@@ -107,8 +107,12 @@ WCHAR *toWCHARn(char *string, DWORD length);
 
 WCHAR *createWCHAR(SizedString *sz);
 char *createCHAR(SizedString *sz);
+WCHAR *createWCHARN(SizedString *sz);
+char *createCHARN(SizedString *sz, DWORD maxsize);
 
 SizedString *createSizedString();
+void initSizedStringFrom(SizedString *s, BYTE *ptr, DWORD size);
+void appendToSizedString(SizedString *s, BYTE *ptr, DWORD size);
 char *int64ttoCHAR(int64t *);
 WCHAR *int64ttoWCHAR(int64t *);
 char *DWORDtoCHAR(DWORD);

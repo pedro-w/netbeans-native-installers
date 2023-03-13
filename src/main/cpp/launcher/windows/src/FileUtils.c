@@ -602,7 +602,7 @@ int64t *getFileSize(LPCTSTR path) {
   return res;
 }
 
-void update_crc32(DWORD *crc, char *ptr, DWORD size) {
+void update_crc32(DWORD *crc, BYTE *ptr, DWORD size) {
   while (size--)
     *crc = CRC32_TABLE[(unsigned char)(*crc ^ *ptr++)] ^ (*crc >> 8);
 }

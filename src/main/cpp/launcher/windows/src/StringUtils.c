@@ -501,8 +501,22 @@ char *createCHAR(SizedString *sz) {
   str[sz->length] = 0;
   return str;
 }
+// TODO delete this when not needed
+char *createCHARN(SizedString *sz, DWORD maxlen) {
+  if (maxlen > sz->length) {
+    maxlen = sz->length;
+  }
+
+  char *str = newpChar(maxlen + 1);
+  DWORD i;
+  for (i = 0; i < maxlen; ++i) {
+    str[i] = sz->bytes[i] ? sz->bytes[i] : '.';
+  }
+  str[maxlen] = 0;
+  return str;
+}
 WCHAR *createWCHAR(SizedString *sz) {
-  char *str = sz->bytes;
+  char *str = (char *)sz->bytes;
   DWORD len = sz->length;
   int unicodeFlags;
   DWORD i;
@@ -578,12 +592,33 @@ SizedString *createSizedString() {
   return s;
 }
 
-void freeSizedString(SizedString **s) {
-  if (*s != NULL) {
-    FREE((*s)->bytes);
-    FREE((*s));
-    *s = NULL;
+void initSizedStringFrom(SizedString *s, BYTE *p, DWORD size) {
+  FREE(s->bytes);
+  if (size > 0) {
+    s->bytes = (BYTE *)LocalAlloc(LPTR, size * sizeof(BYTE));
+    memcpy(s->bytes, p, size);
   }
+  s->length = size;
+}
+void appendToSizedString(SizedString *s, BYTE *p, DWORD size) {
+  DWORD newSize = size + s->length;
+  BYTE *newBytes = (BYTE *)LocalAlloc(LPTR, newSize * sizeof(BYTE));
+  if (s->bytes) {
+    memcpy(newBytes, s->bytes, s->length);
+    FREE(s->bytes);
+  }
+  memcpy(newBytes + s->length, p, size);
+  s->bytes = newBytes;
+  s->length = newSize;
+}
+
+void freeSizedString(SizedString **s) {
+  SizedString *ss = *s;
+  if (ss != NULL) {
+    FREE(ss->bytes);
+    FREE(ss);
+  }
+  *s = NULL;
 }
 
 LPTSTR getLocaleName() {

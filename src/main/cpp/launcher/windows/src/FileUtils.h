@@ -33,7 +33,7 @@ extern "C" {
 
 extern LPCTSTR FILE_SEP;
 extern const long CRC32_TABLE[256];
-void update_crc32(DWORD *crc32, char *buf, DWORD size);
+void update_crc32(DWORD *crc32, BYTE *buf, DWORD size);
 int64t *getFreeSpace(LPCTSTR path);
 int64t *getFileSize(LPCTSTR path);
 void checkFreeSpace(LauncherProperties *props, LPCTSTR tmpDir, int64t *size);

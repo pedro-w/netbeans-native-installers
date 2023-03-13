@@ -93,41 +93,33 @@ void skipStub(LauncherProperties *props) {
 
 void modifyRestBytes(SizedString *rest, DWORD start) {
 
-  DWORD len = rest->length - start;
-  char *restBytesNew = NULL;
-
-  if (len > 0) {
-    DWORD i;
-    restBytesNew = newpChar(len);
-    for (i = start; i < rest->length; i++) {
-      restBytesNew[i - start] = (rest->bytes)[i];
-    }
-  }
-  FREE(rest->bytes);
-  rest->bytes = restBytesNew;
-  rest->length = len;
+  rest->length -= start;
+  memcpy(rest->bytes, rest->bytes + start, rest->length);
 }
-
+// Move from 'rest' into 'result' up to a '\0', either in unicode (i.e. UTF-16)
+// mode or not-unicode mode
 DWORD readStringFromBuf(SizedString *rest, SizedString *result,
-                        DWORD isUnicode) {
-  if ((rest->length) != 0) {
+                        BOOL isUnicode) {
+  if (rest->length > 0) {
     // we have smth in the restBytes that we have read but haven`t yet proceeded
-    DWORD i = 0;
-    for (i = 0; i < rest->length; i++) {
-      DWORD check = ((rest->bytes)[i] == 0);
-      if (isUnicode) {
-        if ((i / 2) * 2 == i) { // i is even
-          check =
-              check && (i < rest->length - 1 && ((rest->bytes)[i + 1] == 0));
-        } else {
-          check = 0;
+    DWORD i;
+    if (isUnicode) {
+      for (i = 0; i < rest->length; i += sizeof(WCHAR)) {
+        WCHAR *ptr = (WCHAR *)(rest->bytes + i);
+        if (*ptr == L'\0') {
+          initSizedStringFrom(result, rest->bytes, i);
+          modifyRestBytes(rest, i + sizeof(WCHAR));
+          return ERROR_OK;
         }
       }
-      if (check) { // we have found null character in the rest bytes
-        result->bytes = appendStringN(NULL, 0, rest->bytes, i);
-        result->length = i;
-        modifyRestBytes(rest, i + 1 + isUnicode);
-        return ERROR_OK;
+    } else {
+      for (i = 0; i < rest->length; ++i) {
+        char *ptr = (char *)(rest->bytes + i);
+        if (*ptr == '\0') {
+          initSizedStringFrom(result, rest->bytes, i);
+          modifyRestBytes(rest, i + 1);
+          return ERROR_OK;
+        }
       }
     }
     // here we have found no \0 character in the rest of bytes...
@@ -136,13 +128,13 @@ DWORD readStringFromBuf(SizedString *rest, SizedString *result,
 }
 
 void readString(LauncherProperties *props, SizedString *result,
-                DWORD isUnicode) {
+                BOOL isUnicode) {
   DWORD *status = &props->status;
   HANDLE hFileRead = props->handler;
   SizedString *rest = props->restOfBytes;
   DWORD bufferSize = props->bufsize;
   DWORD read = 0;
-  char *buf = NULL;
+  BYTE *buf = NULL;
 
   if (*status != ERROR_OK)
     return;
@@ -153,17 +145,15 @@ void readString(LauncherProperties *props, SizedString *result,
 
   // we need to read file for more data to find \0 character...
 
-  buf = newpChar(bufferSize);
-
-  while (ReadFile(hFileRead, buf, bufferSize, &read, 0) && read) {
+  buf = (BYTE *)newpChar(bufferSize);
+  while (ReadFile(hFileRead, buf, bufferSize, &read, 0)) {
     addProgressPosition(props, read);
-    rest->bytes = appendStringN(rest->bytes, rest->length, buf, read);
-    rest->length = rest->length + read;
+    appendToSizedString(rest, buf, read);
     if (readStringFromBuf(rest, result, isUnicode) == ERROR_OK) {
-      // if(result->bytes!=NULL) {
-      // we have find \0 character
+      // we have found \0 character
       break;
     }
+
     ZERO(buf, sizeof(char) * bufferSize);
     if (read == 0) { // we have nothing to read.. smth wrong
       *status = ERROR_INTEGRITY;
@@ -211,7 +201,9 @@ void readNumber(LauncherProperties *props, DWORD *result) {
             props, OUTPUT_LEVEL_DEBUG, 1,
             TEXT("Can`t read number from string (it contains zero character):"),
             1);
-        writeMessage(props, OUTPUT_LEVEL_DEBUG, 1, numberString->bytes, 1);
+        // TODO this cast is almost certainly wrong
+        writeMessage(props, OUTPUT_LEVEL_DEBUG, 1, (LPTSTR)numberString->bytes,
+                     1);
         props->status = ERROR_INTEGRITY;
         break;
       } else {
@@ -219,25 +211,30 @@ void readNumber(LauncherProperties *props, DWORD *result) {
         writeMessage(props, OUTPUT_LEVEL_DEBUG, 1,
                      TEXT("Can`t read number from string (unexpected error):"),
                      1);
-        writeMessage(props, OUTPUT_LEVEL_DEBUG, 1, numberString->bytes, 1);
+        // TODO this cast is almost certainly wrong
+        writeMessage(props, OUTPUT_LEVEL_DEBUG, 1, (LPTSTR)numberString->bytes,
+                     1);
         props->status = ERROR_INTEGRITY;
         break;
       }
     }
     freeSizedString(&numberString);
     *result = number;
+  } else {
+    writeMessage(props, OUTPUT_LEVEL_DEBUG, 1,
+                 TEXT("Error!! Reading number and not ok."), 1);
   }
 }
 
 void readStringWithDebug(LauncherProperties *props, LPTSTR *dest,
-                         LPCTSTR paramName) {
+                         LPCTSTR paramName, BOOL isUnicode) {
   SizedString *sizedStr = createSizedString();
   if (paramName != NULL) {
     writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("Reading "), 0);
     writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, paramName, 0);
     writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT(" : "), 0);
   }
-  readString(props, sizedStr, 1);
+  readString(props, sizedStr, isUnicode);
   if (!isOK(props)) {
     freeSizedString(&sizedStr);
     writeMessage(
@@ -245,18 +242,30 @@ void readStringWithDebug(LauncherProperties *props, LPTSTR *dest,
         TEXT("[ERROR] Can`t read string !! Seems to be integrity error"), 1);
     return;
   }
-  *dest = createTCHAR(sizedStr);
+  if (isUnicode) {
+#ifdef _UNICODE
+    *dest = createWCHAR(sizedStr);
+#else
+    LPWSTR tmp = createWCHAR(sizedStr);
+    *dest = toChar(tmp);
+    FREE(tmp);
+#endif
+  } else {
+#ifdef _UNICODE
+    LPSTR tmp = createCHAR(sz);
+    *dest = toWCHAR(tmp);
+    FREE(tmp);
+#else
+    *dest = createCHAR(sizedStr);
+#endif
+  }
   freeSizedString(&sizedStr);
   if (paramName != NULL) {
-    if ((*dest) != NULL) {
-      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, *dest, 1);
-    } else {
-      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("NULL"), 1);
-    }
+    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, *dest ? *dest : TEXT("NULL"), 1);
   }
   return;
 }
-
+/*
 void readStringWithDebugA(LauncherProperties *props, char **dest,
                           char *paramName) {
   SizedString *sizedStr = createSizedString();
@@ -281,7 +290,7 @@ void readStringWithDebugA(LauncherProperties *props, char **dest,
   freeSizedString(&sizedStr);
   return;
 }
-
+*/
 void readNumberWithDebug(LauncherProperties *props, DWORD *dest,
                          LPCTSTR paramName) {
   writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("Reading "), 0);
@@ -351,15 +360,15 @@ void extractDataToFile(LauncherProperties *props, LPTSTR output,
       return;
     }
     if (props->restOfBytes->length != 0 && props->restOfBytes->bytes != NULL) {
-      // check if the data stored in restBytes is more than we neen
-      // rest bytes contains much less than int64t so we operate here only bith
+      // check if the data stored in restBytes is more than we need
+      // rest bytes contains much less than int64t so we operate here only with
       // low bits of size
       DWORD restBytesToWrite = (compare(size, props->restOfBytes->length) > 0)
                                    ? props->restOfBytes->length
                                    : size->Low;
       DWORD usedBytes = restBytesToWrite;
 
-      char *ptr = props->restOfBytes->bytes;
+      BYTE *ptr = props->restOfBytes->bytes;
 
       DWORD write = 0;
       while (restBytesToWrite > 0) {
@@ -374,7 +383,7 @@ void extractDataToFile(LauncherProperties *props, LPTSTR output,
 
     if (compare(size, 0) > 0) {
       DWORD bufferSize = props->bufsize;
-      char *buf = newpChar(bufferSize);
+      BYTE *buf = (BYTE *)newpChar(bufferSize);
       DWORD bufsize = (compare(size, bufferSize) > 0) ? bufferSize : size->Low;
       DWORD read = 0;
       //  printf("Using buffer size: %u/%u\n", bufsize, bufferSize);
@@ -423,7 +432,7 @@ void extractFileToDir(LauncherProperties *props, LPTSTR *resultFile) {
   int64t *fileLength = NULL;
   DWORD crc = 0;
   writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("Extracting file ..."), 1);
-  readStringWithDebug(props, &fileName, TEXT("file name"));
+  readStringWithDebug(props, &fileName, TEXT("file name"), TRUE);
 
   fileLength = newint64_t(0, 0);
   readBigNumberWithDebug(props, fileLength, "file length ");
@@ -503,21 +512,21 @@ void loadI18NStrings(LauncherProperties *props) {
       (I18NStrings *)LocalAlloc(LPTR, sizeof(I18NStrings) * numberOfProperties);
 
   props->I18N_PROPERTIES_NUMBER = numberOfProperties;
-  props->i18nMessages->properties = newppChar(props->I18N_PROPERTIES_NUMBER);
+  props->i18nMessages->properties = newppTCHAR(props->I18N_PROPERTIES_NUMBER);
   props->i18nMessages->strings = newppTCHAR(props->I18N_PROPERTIES_NUMBER);
 
   for (i = 0; isOK(props) && i < numberOfProperties; i++) {
     // read property name as ASCII
     LPTSTR propName = NULL;
-    LPTSTR number = DWORDtoCHARN(i, 2);
+    LPTSTR number = DWORDtoTCHARN(i, 2);
     props->i18nMessages->properties[i] = NULL;
     props->i18nMessages->strings[i] = NULL;
     propName = appendString(NULL, TEXT("property name "));
 
     propName = appendString(propName, number);
     FREE(number);
-
-    readStringWithDebug(props, &(props->i18nMessages->properties[i]), propName);
+    readStringWithDebug(props, &(props->i18nMessages->properties[i]), propName,
+                        FALSE);
     FREE(propName);
   }
   if (isOK(props)) {
@@ -543,7 +552,7 @@ void loadI18NStrings(LauncherProperties *props) {
       // read locale name as UNICODE ..
       // it should be like en_US or smth like that
       localeName = NULL;
-      readStringWithDebug(props, &localeName, TEXT("locale name"));
+      readStringWithDebug(props, &localeName, TEXT("locale name"), TRUE);
       if (!isOK(props))
         break;
 
@@ -563,7 +572,7 @@ void loadI18NStrings(LauncherProperties *props) {
         s3 = appendString(s3, s2);
         FREE(s1);
         FREE(s2);
-        readStringWithDebug(props, &value, s3);
+        readStringWithDebug(props, &value, s3, TRUE);
 
         FREE(s3);
         if (!isOK(props))
@@ -672,7 +681,7 @@ void extractLauncherResource(LauncherProperties *props, LauncherResource **file,
     } else {
       writeMessage(props, OUTPUT_LEVEL_DEBUG, 1, TEXT("... file is external"),
                    1);
-      readStringWithDebug(props, &((*file)->path), name);
+      readStringWithDebug(props, &((*file)->path), name, FALSE);
       if (!isOK(props)) {
         writeMessage(props, OUTPUT_LEVEL_DEBUG, 1, TEXT("Error reading "), 1);
         writeMessage(props, OUTPUT_LEVEL_DEBUG, 1, name, 1);
@@ -701,7 +710,7 @@ void readTCHARList(LauncherProperties *props, TCHARList **list, LPCTSTR name) {
   for (i = 0; i < (*list)->size; i++) {
     LPTSTR nextStr =
         appendString(appendString(NULL, TEXT("next item in ")), name);
-    readStringWithDebug(props, &((*list)->items[i]), nextStr);
+    readStringWithDebug(props, &((*list)->items[i]), nextStr, TRUE);
     FREE(nextStr);
     if (!isOK(props))
       return;
@@ -742,11 +751,12 @@ void readLauncherProperties(LauncherProperties *props) {
   if (!isOK(props))
     return;
 
-  readStringWithDebug(props, &(props->mainClass), TEXT("Main Class"));
+  readStringWithDebug(props, &(props->mainClass), TEXT("Main Class"), TRUE);
   if (!isOK(props))
     return;
 
-  readStringWithDebug(props, &(props->testJVMClass), TEXT("TestJVM Class"));
+  readStringWithDebug(props, &(props->testJVMClass), TEXT("TestJVM Class"),
+                      TRUE);
   if (!isOK(props))
     return;
 
@@ -762,7 +772,7 @@ void readLauncherProperties(LauncherProperties *props) {
 
       props->compatibleJava[i] = newJavaCompatible();
 
-      readStringWithDebug(props, &str, TEXT("min java version"));
+      readStringWithDebug(props, &str, TEXT("min java version"), FALSE);
       if (!isOK(props))
         return;
       props->compatibleJava[i]->minVersion =
@@ -772,7 +782,7 @@ void readLauncherProperties(LauncherProperties *props) {
         return;
 
       str = NULL;
-      readStringWithDebug(props, &str, TEXT("max java version"));
+      readStringWithDebug(props, &str, TEXT("max java version"), FALSE);
       if (!isOK(props))
         return;
       props->compatibleJava[i]->maxVersion =
@@ -782,17 +792,17 @@ void readLauncherProperties(LauncherProperties *props) {
         return;
 
       readStringWithDebug(props, &(props->compatibleJava[i]->vendor),
-                          TEXT("vendor"));
+                          TEXT("vendor"), FALSE);
       if (!isOK(props))
         return;
 
-      readStringWithDebugA(props, &(props->compatibleJava[i]->osName),
-                           TEXT("os name"));
+      readStringWithDebug(props, &(props->compatibleJava[i]->osName),
+                          TEXT("os name"), FALSE);
       if (!isOK(props))
         return;
 
-      readStringWithDebugA(props, &(props->compatibleJava[i]->osArch),
-                           TEXT("os arch"));
+      readStringWithDebug(props, &(props->compatibleJava[i]->osArch),
+                          TEXT("os arch"), FALSE);
       if (!isOK(props))
         return;
     }
