@@ -18,9 +18,9 @@
  */
 
 #ifndef _SystemUtils_H
-#define	_SystemUtils_H
+#define _SystemUtils_H
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -32,13 +32,12 @@ DWORD is2003();
 DWORD is2008();
 DWORD is7();
 DWORD isVista();
-void  initWow64();
+void initWow64();
 
 extern BOOL IsWow64;
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* _SystemUtils_H */
-
+#endif /* _SystemUtils_H */

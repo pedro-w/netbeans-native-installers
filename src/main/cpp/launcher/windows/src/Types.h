@@ -18,138 +18,141 @@
  */
 
 #ifndef _Types_H
-#define	_Types_H
+#define _Types_H
 
+#include <tchar.h>
 #include <windows.h>
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
-    
-    typedef struct int64s {
-        DWORD Low;
-        DWORD High;
-    } int64t;
-    
-    
-    typedef struct {
-        long major;
-        long minor;
-        long micro;
-        long update;
-        char build [128];
-    } JavaVersion;
-    
-    typedef struct _javaProps {
-        WCHAR * javaHome;
-        WCHAR * javaExe;
-        char  * vendor;
-        char  * osName;
-        char  * osArch;
-        JavaVersion *version;
-    } JavaProperties;
-    
-    typedef struct _javaCompatible {
-        JavaVersion * minVersion;
-        JavaVersion * maxVersion;
-        char * vendor;
-        char * osName;
-        char * osArch;
-    } JavaCompatible;
-    
-    typedef struct _launcherResource {
-        WCHAR * path;
-        WCHAR * resolved;
-        DWORD   type;        
-    } LauncherResource;
-    
-    typedef struct _launcherResourceList {
-        LauncherResource ** items;
-        DWORD size;
-    } LauncherResourceList;
-    
-    typedef struct _WCHARList {
-        WCHAR ** items;
-        DWORD size;
-    } WCHARList;
-    
-    typedef struct _string {
-        char * bytes;
-        DWORD length;
-    } SizedString ;
-    
-    typedef struct _i18nstrings {
-        char  ** properties; //property name as ASCII
-        WCHAR ** strings; //value as UNICODE
-    } I18NStrings;
-        
-    
-    
-    typedef struct _stringListEntry {
-        WCHAR * string;        
-        struct _stringListEntry * next;
-    } StringListEntry;
-    
-    typedef struct _launchProps {
-        
-        LauncherResourceList * jars;
-        LauncherResourceList * jvms;
-        LauncherResourceList * other;
-        
-        LauncherResource * testJVMFile;
-        
-        WCHAR * testJVMClass;
-        WCHAR * tmpDir;
-        DWORD   tmpDirCreated;
-        int64t * bundledSize;
-        DWORD bundledNumber;
-        JavaCompatible ** compatibleJava;
-        DWORD             compatibleJavaNumber;
-        
-        DWORD checkForFreeSpace;
-        DWORD silent;
-        WCHARList * jvmArguments;
-        WCHARList * appArguments;
-        
-        DWORD    extractOnly;
-        WCHAR  * classpath;
-        WCHAR  * mainClass;
-        
-        JavaProperties  * java;
-        WCHAR  * command;
-        WCHAR  * exePath;
-        WCHAR  * exeDir;
-        WCHAR  * exeName;
-        DWORD status;
-        DWORD exitCode;
-        DWORD silentMode;
-        HANDLE handler;
-        DWORD outputLevel;
-        WCHARList * commandLine;
-        HANDLE stdoutHandle;
-        HANDLE stderrHandle;
-        DWORD bufsize;
-        int64t * launcherSize;
-        DWORD  isOnlyStub;
-        WCHAR * userDefinedJavaHome;
-        WCHAR * userDefinedTempDir;
-        WCHAR * userDefinedExtractDir;
-        WCHAR * userDefinedOutput;
-        WCHAR * userDefinedLocale;
-        SizedString * restOfBytes;
-        I18NStrings * i18nMessages;
-        DWORD I18N_PROPERTIES_NUMBER;
-        StringListEntry * alreadyCheckedJava;
-        WCHARList * launcherCommandArguments;       
-        WCHAR * defaultUserDirRoot;
-        WCHAR * defaultCacheDirRoot;
-        
-    } LauncherProperties ;
-    
-    
-    
-#ifdef	__cplusplus
+
+typedef struct int64s {
+  DWORD Low;
+  DWORD High;
+} int64t;
+
+typedef struct {
+  long major;
+  long minor;
+  long micro;
+  long update;
+  char build[128];
+} JavaVersion;
+
+typedef struct _javaProps {
+  TCHAR *javaHome;
+  TCHAR *javaExe;
+  TCHAR *vendor;
+  TCHAR *osName;
+  TCHAR *osArch;
+  JavaVersion *version;
+} JavaProperties;
+
+typedef struct _javaCompatible {
+  JavaVersion *minVersion;
+  JavaVersion *maxVersion;
+  TCHAR *vendor;
+  TCHAR *osName;
+  TCHAR *osArch;
+} JavaCompatible;
+
+typedef struct _launcherResource {
+  TCHAR *path;
+  TCHAR *resolved;
+  DWORD type;
+} LauncherResource;
+
+typedef struct _launcherResourceList {
+  LauncherResource **items;
+  DWORD size;
+} LauncherResourceList;
+
+typedef struct _WCHARList {
+  WCHAR **items;
+  DWORD size;
+} WCHARList;
+typedef struct _charList {
+  char **items;
+  DWORD size;
+} charList;
+#ifdef UNICODE
+typedef struct _WCHARList TCHARList;
+#else
+typedef struct _charList TCHARList;
+#endif
+typedef struct _string {
+  TCHAR *bytes;
+  DWORD length;
+} SizedString;
+
+typedef struct _i18nstrings {
+  TCHAR **properties; // property name
+  TCHAR **strings;    // value
+} I18NStrings;
+
+typedef struct _stringListEntry {
+  LPTSTR string;
+  struct _stringListEntry *next;
+} StringListEntry;
+
+typedef struct _launchProps {
+
+  LauncherResourceList *jars;
+  LauncherResourceList *jvms;
+  LauncherResourceList *other;
+
+  LauncherResource *testJVMFile;
+
+  TCHAR *testJVMClass;
+  TCHAR *tmpDir;
+  DWORD tmpDirCreated;
+  int64t *bundledSize;
+  DWORD bundledNumber;
+  JavaCompatible **compatibleJava;
+  DWORD compatibleJavaNumber;
+
+  DWORD checkForFreeSpace;
+  DWORD silent;
+  TCHARList *jvmArguments;
+  TCHARList *appArguments;
+
+  DWORD extractOnly;
+  TCHAR *classpath;
+  TCHAR *mainClass;
+
+  JavaProperties *java;
+  TCHAR *command;
+  TCHAR *exePath;
+  TCHAR *exeDir;
+  TCHAR *exeName;
+  DWORD status;
+  DWORD exitCode;
+  DWORD silentMode;
+  HANDLE handler;
+  DWORD outputLevel;
+  TCHARList *commandLine;
+  HANDLE stdoutHandle;
+  HANDLE stderrHandle;
+  DWORD bufsize;
+  int64t *launcherSize;
+  DWORD isOnlyStub;
+  TCHAR *userDefinedJavaHome;
+  TCHAR *userDefinedTempDir;
+  TCHAR *userDefinedExtractDir;
+  TCHAR *userDefinedOutput;
+  TCHAR *userDefinedLocale;
+  SizedString *restOfBytes;
+  I18NStrings *i18nMessages;
+  DWORD I18N_PROPERTIES_NUMBER;
+  StringListEntry *alreadyCheckedJava;
+  TCHARList *launcherCommandArguments;
+  TCHAR *defaultUserDirRoot;
+  TCHAR *defaultCacheDirRoot;
+
+} LauncherProperties;
+
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* _Types_H */
-
+#endif /* _Types_H */

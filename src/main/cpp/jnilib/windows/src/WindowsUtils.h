@@ -18,13 +18,13 @@
  */
 
 #include <jni.h>
-#include <windows.h>
-#include <winreg.h>
-#include <winnt.h>
+#include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
+#include <windows.h>
+#include <winnt.h>
+#include <winreg.h>
 
 #include "../../.common/src/CommonUtils.h"
 
@@ -37,9 +37,13 @@ extern "C" {
 
 HKEY getHKEY(jint jSection);
 
-int queryValue(int mode, HKEY section, const unsigned short * key, const unsigned short * name, DWORD* type, DWORD* size, byte** value, int expand);
+int queryValue(int mode, HKEY section, const unsigned short *key,
+               const unsigned short *name, DWORD *type, DWORD *size,
+               byte **value, int expand);
 
-int setValue(int mode, HKEY section, const unsigned short * key, const unsigned short * name, DWORD type, const byte* data, int size, int expand);
+int setValue(int mode, HKEY section, const unsigned short *key,
+             const unsigned short *name, DWORD type, const byte *data, int size,
+             int expand);
 
 LONG getMode(jint jmode);
 #ifdef __cplusplus

@@ -31,76 +31,80 @@ extern "C" {
 #define org_netbeans_installer_utils_system_WindowsNativeUtils_MIN_UID_INDEX 1L
 
 #undef org_netbeans_installer_utils_system_WindowsNativeUtils_MAX_UID_INDEX
-#define org_netbeans_installer_utils_system_WindowsNativeUtils_MAX_UID_INDEX 100L
+#define org_netbeans_installer_utils_system_WindowsNativeUtils_MAX_UID_INDEX   \
+  100L
 
 /*
  * Class:     org_netbeans_installer_utils_system_WindowsNativeUtils
  * Method:    isCurrentUserAdmin0
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_org_netbeans_installer_utils_system_WindowsNativeUtils_isCurrentUserAdmin0
-  (JNIEnv *, jobject);
+JNIEXPORT jboolean JNICALL
+Java_org_netbeans_installer_utils_system_WindowsNativeUtils_isCurrentUserAdmin0(
+    JNIEnv *, jobject);
 
 /*
  * Class:     org_netbeans_installer_utils_system_WindowsNativeUtils
  * Method:    getFreeSpace0
  * Signature: (Ljava/lang/String;)J
  */
-JNIEXPORT jlong JNICALL Java_org_netbeans_installer_utils_system_WindowsNativeUtils_getFreeSpace0
-  (JNIEnv *, jobject, jstring);
+JNIEXPORT jlong JNICALL
+Java_org_netbeans_installer_utils_system_WindowsNativeUtils_getFreeSpace0(
+    JNIEnv *, jobject, jstring);
 
 /*
  * Class:     org_netbeans_installer_utils_system_WindowsNativeUtils
  * Method:    createShortcut0
  * Signature: (Lorg/netbeans/installer/utils/system/shortcut/FileShortcut;)V
  */
-JNIEXPORT void JNICALL Java_org_netbeans_installer_utils_system_WindowsNativeUtils_createShortcut0
-  (JNIEnv *, jobject, jobject);
-
+JNIEXPORT void JNICALL
+Java_org_netbeans_installer_utils_system_WindowsNativeUtils_createShortcut0(
+    JNIEnv *, jobject, jobject);
 
 /*
  * Class:     org_netbeans_installer_utils_system_WindowsNativeUtils
  * Method:    deleteFileOnReboot0
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_netbeans_installer_utils_system_WindowsNativeUtils_deleteFileOnReboot0
-  (JNIEnv *, jobject, jstring);
+JNIEXPORT void JNICALL
+Java_org_netbeans_installer_utils_system_WindowsNativeUtils_deleteFileOnReboot0(
+    JNIEnv *, jobject, jstring);
 
 /*
  * Class:     org_netbeans_installer_utils_system_WindowsNativeUtils
  * Method:    createProcessWithoutHandles0
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_netbeans_installer_utils_system_WindowsNativeUtils_createProcessWithoutHandles0
-  (JNIEnv *, jobject, jstring);
-
+JNIEXPORT void JNICALL
+Java_org_netbeans_installer_utils_system_WindowsNativeUtils_createProcessWithoutHandles0(
+    JNIEnv *, jobject, jstring);
 
 /*
  * Class:     org_netbeans_installer_utils_system_WindowsNativeUtils
  * Method:    notifyAssociationChanged0
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_netbeans_installer_utils_system_WindowsNativeUtils_notifyAssociationChanged0
-  (JNIEnv *, jobject);
-
+JNIEXPORT void JNICALL
+Java_org_netbeans_installer_utils_system_WindowsNativeUtils_notifyAssociationChanged0(
+    JNIEnv *, jobject);
 
 /*
  * Class:     org_netbeans_installer_utils_system_WindowsNativeUtils
  * Method:    checkAccessTokenAccessLevel0
  * Signature: (Ljava/lang/String;I)I
  */
-JNIEXPORT jint JNICALL Java_org_netbeans_installer_utils_system_WindowsNativeUtils_checkAccessTokenAccessLevel0
-  (JNIEnv *, jobject, jstring, jint);
-
+JNIEXPORT jint JNICALL
+Java_org_netbeans_installer_utils_system_WindowsNativeUtils_checkAccessTokenAccessLevel0(
+    JNIEnv *, jobject, jstring, jint);
 
 /*
  * Class:     org_netbeans_installer_utils_system_WindowsNativeUtils
  * Method:    notifyEnvironmentChanged0
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_org_netbeans_installer_utils_system_WindowsNativeUtils_notifyEnvironmentChanged0
-  (JNIEnv *, jobject);
-
+JNIEXPORT jboolean JNICALL
+Java_org_netbeans_installer_utils_system_WindowsNativeUtils_notifyEnvironmentChanged0(
+    JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

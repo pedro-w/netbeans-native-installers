@@ -18,91 +18,94 @@
  */
 
 #include <jni.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/statvfs.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/statvfs.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "../../.common/src/CommonUtils.h"
 #include "jni_UnixNativeUtils.h"
 
-
 jboolean statMode(const char *path, int *mode) {
-    struct stat sb;
-    if (stat(path, &sb) == 0) {
-        *mode = sb.st_mode;
-        return 1;
-    } else {
-        return 0;
-    }
+  struct stat sb;
+  if (stat(path, &sb) == 0) {
+    *mode = sb.st_mode;
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
+JNIEXPORT jlong JNICALL
+Java_org_netbeans_installer_utils_system_UnixNativeUtils_getFreeSpace0(
+    JNIEnv *jEnv, jobject jObject, jstring jPath) {
+  char *path = getChars(jEnv, jPath);
+  jlong result = 0;
 
-JNIEXPORT jlong JNICALL Java_org_netbeans_installer_utils_system_UnixNativeUtils_getFreeSpace0(JNIEnv* jEnv, jobject jObject, jstring jPath) {
-    char* path   = getChars(jEnv, jPath);
-    jlong result = 0;
-    
-    struct statvfs fsstat;
-    if(memset(&fsstat, 0, sizeof(struct statvfs)) != NULL) {
-        if(statvfs(path, &fsstat) == 0) {
-            result = (jlong) fsstat.f_frsize;
-            result *= (jlong) fsstat.f_bfree;
-        }
+  struct statvfs fsstat;
+  if (memset(&fsstat, 0, sizeof(struct statvfs)) != NULL) {
+    if (statvfs(path, &fsstat) == 0) {
+      result = (jlong)fsstat.f_frsize;
+      result *= (jlong)fsstat.f_bfree;
     }
-    
-    
-    FREE(path);
-    return result;
+  }
+
+  FREE(path);
+  return result;
 }
 
-
-JNIEXPORT void JNICALL Java_org_netbeans_installer_utils_system_UnixNativeUtils_setPermissions0(JNIEnv *jEnv, jobject jObject, jstring jPath, jint jMode, jint jChange) {
-    char* path = getChars(jEnv, jPath);    
-    int currentMode = 0 ;
-    char * msg = NULL;
-    if(statMode(path, &currentMode)) {
-        switch (jChange) {
-            case MODE_CHANGE_SET:
-                currentMode |= (S_IRWXU | S_IRWXG | S_IRWXO);
-                currentMode &= jMode;
-                break;
-            case MODE_CHANGE_ADD:
-                currentMode |= jMode;
-                break;
-            case MODE_CHANGE_REMOVE:
-                currentMode &= ~jMode;
-                break;
-            default:     
-                msg = (char*) malloc(sizeof(char) * 60);
-                memset(msg, 0, sizeof(char) * 60);
-                sprintf(msg, "Selected change mode (%ld) is not supported", jChange);
-                throwException(jEnv, msg);
-                FREE(msg);
-                FREE(path);                
-                return;                
-        }
-        chmod(path, currentMode);
-    } else {
-        throwException(jEnv, "Can`t get file current permissions");
+JNIEXPORT void JNICALL
+Java_org_netbeans_installer_utils_system_UnixNativeUtils_setPermissions0(
+    JNIEnv *jEnv, jobject jObject, jstring jPath, jint jMode, jint jChange) {
+  char *path = getChars(jEnv, jPath);
+  int currentMode = 0;
+  char *msg = NULL;
+  if (statMode(path, &currentMode)) {
+    switch (jChange) {
+    case MODE_CHANGE_SET:
+      currentMode |= (S_IRWXU | S_IRWXG | S_IRWXO);
+      currentMode &= jMode;
+      break;
+    case MODE_CHANGE_ADD:
+      currentMode |= jMode;
+      break;
+    case MODE_CHANGE_REMOVE:
+      currentMode &= ~jMode;
+      break;
+    default:
+      msg = (char *)malloc(sizeof(char) * 60);
+      memset(msg, 0, sizeof(char) * 60);
+      sprintf(msg, "Selected change mode (%ld) is not supported", jChange);
+      throwException(jEnv, msg);
+      FREE(msg);
+      FREE(path);
+      return;
     }
-    FREE(path);
+    chmod(path, currentMode);
+  } else {
+    throwException(jEnv, "Can`t get file current permissions");
+  }
+  FREE(path);
 }
 
+JNIEXPORT jint JNICALL
+Java_org_netbeans_installer_utils_system_UnixNativeUtils_getPermissions0(
+    JNIEnv *jEnv, jobject jObject, jstring jPath) {
+  char *path = getChars(jEnv, jPath);
+  int currentMode;
+  if (statMode(path, &currentMode)) {
+    return currentMode & (S_IRWXU | S_IRWXG | S_IRWXO);
+  } else {
+    throwException(jEnv, "Can`t get file current permissions");
+  }
 
-JNIEXPORT jint JNICALL Java_org_netbeans_installer_utils_system_UnixNativeUtils_getPermissions0(JNIEnv *jEnv, jobject jObject, jstring jPath) {
-    char* path = getChars(jEnv, jPath);
-    int currentMode;
-    if(statMode(path, &currentMode)) {
-        return currentMode & (S_IRWXU | S_IRWXG | S_IRWXO);
-    } else {
-        throwException(jEnv, "Can`t get file current permissions");
-    }
-    
-    FREE(path);
+  FREE(path);
 }
 
-JNIEXPORT jboolean JNICALL Java_org_netbeans_installer_utils_system_UnixNativeUtils_isCurrentUserAdmin0 (JNIEnv *jEnv, jobject jObject) {
-    return (geteuid()==0);
+JNIEXPORT jboolean JNICALL
+Java_org_netbeans_installer_utils_system_UnixNativeUtils_isCurrentUserAdmin0(
+    JNIEnv *jEnv, jobject jObject) {
+  return (geteuid() == 0);
 }

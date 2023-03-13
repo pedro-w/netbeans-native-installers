@@ -18,41 +18,43 @@
  */
 
 #ifndef _Main_H
-#define	_Main_H
+#define _Main_H
 
-#include <wchar.h>
 #include "Errors.h"
+#include "Types.h"
+#include <wchar.h>
 
-
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
-void addProgressPosition(LauncherProperties *props,DWORD add);
-void setProgressRange(LauncherProperties *props, int64t * size);
-void setErrorDetailString(LauncherProperties *props,const WCHAR * message);
-void setErrorTitleString(LauncherProperties *props,const WCHAR * message);
-void setButtonString(LauncherProperties *props,const WCHAR * message);
-void setProgressTitleString(LauncherProperties *props,const WCHAR * message);
-void setMainWindowTitle(LauncherProperties * props, const WCHAR * message);
+void addProgressPosition(LauncherProperties *props, DWORD add);
+void setProgressRange(LauncherProperties *props, int64t *size);
+void setErrorDetailString(LauncherProperties *props, LPCTSTR message);
+void setErrorTitleString(LauncherProperties *props, LPCTSTR message);
+void setButtonString(LauncherProperties *props, LPCTSTR message);
+void setProgressTitleString(LauncherProperties *props, LPCTSTR message);
+void setMainWindowTitle(LauncherProperties *props, LPCTSTR message);
 
 void showLauncherWindows(LauncherProperties *props);
 void closeLauncherWindows(LauncherProperties *props);
 void hideLauncherWindows(LauncherProperties *props);
 
-void hide(LauncherProperties *props,HWND hwnd);
-void show(LauncherProperties *props,HWND hwnd);
+void hide(LauncherProperties *props, HWND hwnd);
+void show(LauncherProperties *props, HWND hwnd);
 
-DWORD isTerminated(LauncherProperties * props);
+DWORD isTerminated(LauncherProperties *props);
 
-void showErrorW(LauncherProperties *props, const char * error, const DWORD varArgsNumber, ...);
+void showError(LauncherProperties *props, LPCTSTR error,
+               const DWORD varArgsNumber, ...);
 
-void showMessageW(LauncherProperties *props,const WCHAR* message, const DWORD number, ...);
-//void showMessageA(LauncherProperties *props,const char * message, const DWORD varArgsNumber, ...);
+void showMessage(LauncherProperties *props, LPCTSTR message, const DWORD number,
+                 ...);
+// void showMessageA(LauncherProperties *props,const char * message, const DWORD
+// varArgsNumber, ...);
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* _Main_H */
-
+#endif /* _Main_H */

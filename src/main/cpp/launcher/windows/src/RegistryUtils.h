@@ -18,16 +18,17 @@
  */
 
 #ifndef _RegistryUtils_H
-#define	_RegistryUtils_H
+#define _RegistryUtils_H
 
 #include <windows.h>
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
-
-WCHAR * getStringValue(HKEY root, WCHAR *key, WCHAR *valueName, BOOL access64key);
-WCHAR * getStringValuePC(HKEY root, WCHAR *parentkey, WCHAR *childkey, WCHAR *valueName, BOOL access64key);
+LPTSTR getStringValue(HKEY root, LPCTSTR key, LPCTSTR valueName,
+                      BOOL access64key);
+LPTSTR getStringValuePC(HKEY root, LPCTSTR parentkey, LPCTSTR childkey,
+                        LPCTSTR valueName, BOOL access64key);
 
 #ifndef KEY_WOW64_32KEY
 #define KEY_WOW64_32KEY 0x0200
@@ -36,9 +37,8 @@ WCHAR * getStringValuePC(HKEY root, WCHAR *parentkey, WCHAR *childkey, WCHAR *va
 #define KEY_WOW64_64KEY 0x0100
 #endif
 
-
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* _RegistryUtils_H */
+#endif /* _RegistryUtils_H */

@@ -18,43 +18,50 @@
  */
 
 #include "RegistryUtils.h"
+#include "FileUtils.h"
 #include "StringUtils.h"
 #include "SystemUtils.h"
-#include "FileUtils.h"
 
-WCHAR * getStringValue(HKEY root, WCHAR *key, WCHAR *valueName, BOOL access64key) {
-    
-    HKEY hkey = 0 ;
-    WCHAR *result = NULL;
-    DWORD  type  = 0;
-    DWORD  size  = 0;
-    byte*  value = NULL;
-    
-    if(RegOpenKeyExW(root, key, 0, KEY_READ | ((access64key && IsWow64) ? KEY_WOW64_64KEY : 0), &hkey) == ERROR_SUCCESS) {
-        
-        if (RegQueryValueExW(hkey, valueName, NULL, &type, NULL, &size) == ERROR_SUCCESS) {
-            
-            value = (byte*) LocalAlloc(LPTR,(size + 1) * sizeof(WCHAR));
-            ZERO(value, sizeof(WCHAR) * (size + 1));
-            if (RegQueryValueExW(hkey, valueName, NULL, &type, value, &size) == ERROR_SUCCESS) {
-                if(type == REG_SZ) {
-                    result = (WCHAR *)value;
-                }
-            }
-            if(result==NULL) {
-                FREE(value);
-            }            
+LPTSTR getStringValue(HKEY root, LPCTSTR key, LPCTSTR valueName,
+                      BOOL access64key) {
+
+  HKEY hkey = 0;
+  LPTSTR result = NULL;
+  DWORD type = 0;
+  DWORD size = 0;
+  byte *value = NULL;
+
+  if (RegOpenKeyEx(root, key, 0,
+                   KEY_READ | ((access64key && IsWow64) ? KEY_WOW64_64KEY : 0),
+                   &hkey) == ERROR_SUCCESS) {
+
+    if (RegQueryValueEx(hkey, valueName, NULL, &type, NULL, &size) ==
+        ERROR_SUCCESS) {
+
+      value = (byte *)LocalAlloc(LPTR, (size + 1) * sizeof(TCHAR));
+      ZERO(value, sizeof(TCHAR) * (size + 1));
+      if (RegQueryValueEx(hkey, valueName, NULL, &type, value, &size) ==
+          ERROR_SUCCESS) {
+        if (type == REG_SZ) {
+          result = (LPTSTR)value;
         }
+      }
+      if (result == NULL) {
+        FREE(value);
+      }
     }
-    
-    if(hkey!=0) {
-        RegCloseKey(hkey);
-    }
-    return result;
+  }
+
+  if (hkey != 0) {
+    RegCloseKey(hkey);
+  }
+  return result;
 }
-WCHAR * getStringValuePC(HKEY root, WCHAR *parentkey, WCHAR *childkey, WCHAR *valueName, BOOL access64key) {
-    WCHAR * key = appendStringW(appendStringW(appendStringW(NULL, parentkey), L"\\"), childkey);
-    WCHAR *value = getStringValue(root, key, valueName, access64key);
-    FREE(key);
-    return value;
+LPTSTR getStringValuePC(HKEY root, LPCTSTR parentkey, LPCTSTR childkey,
+                        LPCTSTR valueName, BOOL access64key) {
+  LPTSTR key = appendString(
+      appendString(appendString(NULL, parentkey), TEXT("\\")), childkey);
+  LPTSTR value = getStringValue(root, key, valueName, access64key);
+  FREE(key);
+  return value;
 }

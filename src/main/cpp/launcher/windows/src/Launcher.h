@@ -18,36 +18,35 @@
  */
 
 #ifndef _Launcher_H
-#define	_Launcher_H
+#define _Launcher_H
 
-#include <windows.h>
 #include "Errors.h"
 #include "JavaUtils.h"
 #include "Types.h"
+#include <windows.h>
 
-
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
-    
-    extern const WCHAR * NEW_LINE;
-    
-    LauncherProperties * createLauncherProperties();
-    void freeLauncherProperties(LauncherProperties ** props);
-    
-    void printStatus(LauncherProperties * props);
-    void trySetCompatibleJava(WCHAR * location, LauncherProperties * props);
-    DWORD isSilent(LauncherProperties * props);
-    DWORD isLauncherArgument(LauncherProperties * props, WCHAR * value);
-    void processLauncher(LauncherProperties * props);
-    
-    void resolvePath(LauncherProperties * props, LauncherResource * file);
-    void resolveString(LauncherProperties * props, WCHAR ** result);
-    void resolveLauncherProperties(LauncherProperties * props, WCHAR **result);    
-    void appendCommandLineArgument( WCHAR ** command, const WCHAR * arg);
-    
-#ifdef	__cplusplus
+
+extern LPCTSTR NEW_LINE;
+
+LauncherProperties *createLauncherProperties();
+void freeLauncherProperties(LauncherProperties **props);
+
+void printStatus(LauncherProperties *props);
+void trySetCompatibleJava(LPCTSTR location, LauncherProperties *props);
+DWORD isSilent(LauncherProperties *props);
+DWORD isLauncherArgument(LauncherProperties *props, LPCTSTR value);
+void processLauncher(LauncherProperties *props);
+
+void resolvePath(LauncherProperties *props, LauncherResource *file);
+void resolveString(LauncherProperties *props, LPTSTR *result);
+void resolveLauncherProperties(LauncherProperties *props, LPTSTR *result);
+void appendCommandLineArgument(LPTSTR *command, LPCTSTR arg);
+
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* _Launcher_H */
+#endif /* _Launcher_H */

@@ -18,33 +18,36 @@
  */
 
 #ifndef _ExtractUtils_H
-#define	_ExtractUtils_H
+#define _ExtractUtils_H
 
-#include <windows.h>
-#include "StringUtils.h"
-#include "JavaUtils.h"
 #include "Errors.h"
+#include "JavaUtils.h"
+#include "StringUtils.h"
+#include <tchar.h>
+#include <windows.h>
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif    
-    
-    extern const DWORD STUB_FILL_SIZE;
-    
-    void skipStub(LauncherProperties * props);
-    
-    void loadI18NStrings(LauncherProperties * props);
-    
-    WCHARList * newWCHARList(DWORD number) ;
-    void readLauncherProperties(LauncherProperties * props);    
-    void freeWCHARList(WCHARList ** plist);
-    void freeLauncherResource(LauncherResource ** file);
-    
-    void extractJVMData(LauncherProperties * props);
-    void extractData(LauncherProperties *props);
-    
-#ifdef	__cplusplus
+#endif
+
+extern const DWORD STUB_FILL_SIZE;
+
+void skipStub(LauncherProperties *props);
+
+void loadI18NStrings(LauncherProperties *props);
+
+WCHARList *newWCHARList(DWORD number);
+TCHARList *newTCHARList(DWORD number);
+void readLauncherProperties(LauncherProperties *props);
+void freeWCHARList(WCHARList **plist);
+void freeTCHARList(TCHARList **plist);
+void freeLauncherResource(LauncherResource **file);
+
+void extractJVMData(LauncherProperties *props);
+void extractData(LauncherProperties *props);
+
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* _ExtractUtils_H */
+#endif /* _ExtractUtils_H */

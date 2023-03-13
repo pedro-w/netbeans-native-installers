@@ -18,51 +18,53 @@
  */
 
 #ifndef _FileUtils_H
-#define	_FileUtils_H
+#define _FileUtils_H
 
-#include <windows.h>
 #include "Errors.h"
 #include "Types.h"
+#include <windows.h>
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
-    
+
 #define OUTPUT_LEVEL_DEBUG 0
 #define OUTPUT_LEVEL_NORMAL 1
-    
-    
-    extern const WCHAR * FILE_SEP;
-    extern const long CRC32_TABLE[256];
-    void update_crc32(DWORD * crc32, char * buf, DWORD size);
-    int64t * getFreeSpace(WCHAR *path);
-    int64t * getFileSize(WCHAR * path);
-    void checkFreeSpace(LauncherProperties * props, WCHAR * tmpDir, int64t * size);
-    WCHAR * getParentDirectory(WCHAR * dir);
-    void createDirectory(LauncherProperties * props, WCHAR * directory);
-    void createTempDirectory(LauncherProperties * props, WCHAR * argTempDir, DWORD createRndSubDir);
-    void deleteDirectory(LauncherProperties * props,WCHAR * dir);
-    WCHAR * getExePath();
-    WCHAR * getExeName();
-    WCHAR * getExeDirectory();
-    
-    WCHAR * getSystemTemporaryDirectory();    
-    DWORD isDirectory(WCHAR *path);
-    WCHAR * getCurrentDirectory();
-    WCHAR * getCurrentUserHome();
-        
-    
-    void writeMessageW(LauncherProperties * props, DWORD level,DWORD isErr,  const WCHAR * message, DWORD needEndOfLine);
-    void writeMessageA(LauncherProperties * props,DWORD level, DWORD isErr,  const char  * message, DWORD needEndOfLine);
-    void writeErrorA(LauncherProperties * props,DWORD level,   DWORD isErr,  const char  * message, const WCHAR * param, DWORD errorCode);
-    void writeDWORD(LauncherProperties * props,DWORD level,    DWORD isErr,  const char  * message, DWORD value, DWORD needEndOfLine);
-    void writeint64t(LauncherProperties * props,DWORD level,   DWORD isErr,  const char  * message, int64t * value, DWORD needEndOfLine);
-    
-    void flushHandle(HANDLE hd);
-    DWORD fileExists(WCHAR * path);
-    
-    #ifdef	__cplusplus
+
+extern LPCTSTR FILE_SEP;
+extern const long CRC32_TABLE[256];
+void update_crc32(DWORD *crc32, char *buf, DWORD size);
+int64t *getFreeSpace(LPCTSTR path);
+int64t *getFileSize(LPCTSTR path);
+void checkFreeSpace(LauncherProperties *props, LPCTSTR tmpDir, int64t *size);
+LPTSTR getParentDirectory(LPCTSTR dir);
+void createDirectory(LauncherProperties *props, LPCTSTR directory);
+void createTempDirectory(LauncherProperties *props, LPCTSTR argTempDir,
+                         DWORD createRndSubDir);
+void deleteDirectory(LauncherProperties *props, LPCTSTR dir);
+LPTSTR getExePath();
+LPTSTR getExeName();
+LPTSTR getExeDirectory();
+
+LPTSTR getSystemTemporaryDirectory();
+DWORD isDirectory(LPCTSTR path);
+LPTSTR getCurrentDirectory();
+LPTSTR getCurrentUserHome();
+
+void writeMessage(LauncherProperties *props, DWORD level, DWORD isErr,
+                  LPCTSTR message, DWORD needEndOfLine);
+void writeError(LauncherProperties *props, DWORD level, DWORD isErr,
+                LPCTSTR message, LPCTSTR param, DWORD errorCode);
+void writeDWORD(LauncherProperties *props, DWORD level, DWORD isErr,
+                const char *message, DWORD value, DWORD needEndOfLine);
+void writeint64t(LauncherProperties *props, DWORD level, DWORD isErr,
+                 const char *message, int64t *value, DWORD needEndOfLine);
+
+void flushHandle(HANDLE hd);
+DWORD fileExists(LPCTSTR path);
+
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* _FileUtils_H */
+#endif /* _FileUtils_H */

@@ -18,47 +18,49 @@
  */
 
 #ifndef _JavaUtils_H
-#define	_JavaUtils_H
+#define _JavaUtils_H
 
-#include <windows.h>
+#include "Errors.h"
 #include "Launcher.h"
 #include "Types.h"
-#include "Errors.h"
+#include <windows.h>
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
-    
+
 // java.version
 // java.vm.version
 // java.vendor
 // os.name
 // os.arch
-#define TEST_JAVA_PARAMETERS 5    
+#define TEST_JAVA_PARAMETERS 5
 #define MAX_LEN_VALUE_NAME 16383
 
-WCHAR * getJavaResource(WCHAR * location, const WCHAR * suffix);
+LPTSTR getJavaResource(LPCTSTR location, LPCTSTR suffix);
 
-void getJavaProperties(WCHAR * location, LauncherProperties * props, JavaProperties ** javaProps);
+void getJavaProperties(LPCTSTR location, LauncherProperties *props,
+                       JavaProperties **javaProps);
 
-void findSystemJava(LauncherProperties * props);
+void findSystemJava(LauncherProperties *props);
 
-JavaVersion * getJavaVersionFromString(char * string, DWORD * result);
+JavaVersion *getJavaVersionFromString(LPCTSTR string, DWORD *result);
 
-char compareJavaVersion(JavaVersion * first, JavaVersion * second);
+char compareJavaVersion(JavaVersion *first, JavaVersion *second);
 
-DWORD isJavaCompatible(JavaProperties *currentJava, JavaCompatible ** compatibleJava, DWORD number);
+DWORD isJavaCompatible(JavaProperties *currentJava,
+                       JavaCompatible **compatibleJava, DWORD number);
 
-void printJavaProperties(LauncherProperties * props, JavaProperties * javaProps);
+void printJavaProperties(LauncherProperties *props, JavaProperties *javaProps);
 
-void freeJavaProperties(JavaProperties ** props);
+void freeJavaProperties(JavaProperties **props);
 
-void installJVM(LauncherProperties * props, LauncherResource *jvm);
+void installJVM(LauncherProperties *props, LauncherResource *jvm);
 
-JavaCompatible * newJavaCompatible();
+JavaCompatible *newJavaCompatible();
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* _JavaUtils_H */
+#endif /* _JavaUtils_H */

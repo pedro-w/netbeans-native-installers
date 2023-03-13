@@ -18,31 +18,31 @@
  */
 
 #ifndef _ProcessUtils_H
-#define	_ProcessUtils_H
+#define _ProcessUtils_H
 
-#include <windows.h>
-#include <stdio.h>
 #include "Errors.h"
-#include "Types.h"
 #include "ExtractUtils.h"
 #include "FileUtils.h"
+#include "Types.h"
+#include <stdio.h>
+#include <windows.h>
 
-
-
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
-    
-    #define STREAM_BUF_LENGTH 1024
-    
-    extern const DWORD DEFAULT_PROCESS_TIMEOUT;
-    
-    char * readHandle(HANDLE hRead);
-    
-    void executeCommand(LauncherProperties * props, WCHAR * command, WCHAR * dir, DWORD timeLimitMillis, HANDLE hWriteOutput, HANDLE hWriteError, DWORD priority);
-    
-#ifdef	__cplusplus
+
+#define STREAM_BUF_LENGTH 1024
+
+extern const DWORD DEFAULT_PROCESS_TIMEOUT;
+
+LPTSTR readHandle(HANDLE hRead);
+
+void executeCommand(LauncherProperties *props, LPCTSTR command, LPCTSTR dir,
+                    DWORD timeLimitMillis, HANDLE hWriteOutput,
+                    HANDLE hWriteError, DWORD priority);
+
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* _ProcessUtils_H */
+#endif /* _ProcessUtils_H */
