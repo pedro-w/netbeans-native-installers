@@ -1,5 +1,3 @@
-
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,5 +14,18 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-# 
 
+TMPFLD = ../../../../../target/tmp/
+OFLD = ../../../../../target/cleaner/
+
+all: prepfolder cleaner.exe
+
+prepfolder:
+	mkdir -p $(TMPFLD)
+	mkdir -p $(OFLD)
+
+clean:
+	rm -f *.res *.exe *.dll
+
+cleaner.exe: src/main.c
+	i686-w64-mingw32-gcc -s -DARCHITECTURE=32 -Wl,--nxcompat -Wl,--dynamicbase -Wl,--no-seh -Wl,--no-insert-timestamp -mwindows src/main.c -o$(OFLD)cleaner.exe -static -lstdc++ -static-libstdc++ -static-libgcc
