@@ -36,6 +36,7 @@ const WCHAR * UNPACK200_EXE_SUFFIX = L"\\bin\\unpack200.exe";
 const WCHAR * JAVA_LIB_SUFFIX = L"\\lib";
 const WCHAR * PACK_GZ_SUFFIX  = L".pack.gz";
 const WCHAR * JAR_PACK_GZ_SUFFIX = L".jar.pack.gz";
+const WCHAR * PATH_ENV = L"PATH";
 
 const DWORD JVM_EXTRACTION_TIMEOUT = 180000;  //180sec
 
@@ -395,7 +396,6 @@ void searchCurrentJavaRegistry(LauncherProperties * props, BOOL access64key) {
     HKEY rootKeys [2] = {HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER};
     DWORD rootKeysNumber = sizeof(rootKeys)/sizeof(HKEY);
     DWORD keysNumber = sizeof(JAVA_REGISTRY_KEYS)/sizeof(WCHAR*);
-    DWORD status = ERROR_OK;
     
     writeMessageA(props, OUTPUT_LEVEL_NORMAL, 0, "Search java in CurrentVersion values...", 1);
     
@@ -455,7 +455,6 @@ void searchCurrentJavaRegistry(LauncherProperties * props, BOOL access64key) {
                         err = RegEnumKeyExW(hkey, index, buffer, &size, NULL, NULL, NULL, NULL);
                         if (err == ERROR_SUCCESS) {
                             WCHAR  * javaHome = getJavaHomeValue(keys[i], buffer, access64key);
-                            status = ERROR_OK;
                             
                             writeMessageA(props, OUTPUT_LEVEL_NORMAL, 0, (rootKeys[k]==HKEY_LOCAL_MACHINE) ? "HKEY_LOCAL_MACHINE" : "HKEY_CURRENT_USER", 0);
                             writeMessageA(props, OUTPUT_LEVEL_NORMAL, 0, "\\", 0);
@@ -531,7 +530,6 @@ void searchJavaFromEnvVariables(LauncherProperties * props) {
 void unpackJars(LauncherProperties * props, WCHAR * jvmDir, WCHAR * startDir, WCHAR * unpack200exe) {
     DWORD attrs;
     DWORD dwError;
-    DWORD count = 0 ;
     
     if(!isOK(props)) return;
     attrs = GetFileAttributesW(startDir);
@@ -686,10 +684,10 @@ void searchJavaInstallationFolder(LauncherProperties * props) {
     GetModuleFileName(0, executablePath, MAX_PATH);
     char * pch = strrchr(executablePath, '\\');    
     char installationFolder [MAX_PATH]= "";
-    int i = 0;
+    int i;
     int end = (int) (pch - executablePath);
     printf("%i", end);
-    for(i; i < end; i++) {
+    for(i = 0; i < end; i++) {
         installationFolder[i] = executablePath[i];
     }
     strcat(installationFolder, "\\bin\\jre");
@@ -737,6 +735,34 @@ void searchJavaSystemLocations(LauncherProperties * props) {
         }        
     }
 }
+static void searchJavaOnPath(LauncherProperties * props) {
+  // Find the correct size first, then allocate
+  DWORD size = GetEnvironmentVariableW(PATH_ENV, NULL, 0);
+  WCHAR * str = newpWCHAR(size);
+  GetEnvironmentVariableW(PATH_ENV, str, size);
+  StringListEntry * list = splitStringToList(NULL, str, L';');
+  StringListEntry * iter = list;
+  while (iter) {
+    // Quickly check for java.exe ...
+    WCHAR * javaExecutable = appendStringW(NULL, iter->string);
+    javaExecutable = appendStringW(javaExecutable, L"\\java.exe");
+    if (fileExists(javaExecutable)) {
+      // ... then check properly with trySetCompatibleJava
+      WCHAR* msg = appendStringW(NULL, L"A potential path is ");
+      msg = appendStringW(msg, iter->string);
+      writeMessageW(props, OUTPUT_LEVEL_NORMAL, 0, msg, 1);
+      WCHAR * javaHome = getParentDirectory(iter->string);
+      trySetCompatibleJava(javaHome, props);
+      FREE(javaHome);
+      FREE(msg);
+    }
+    FREE(javaExecutable);
+    iter = iter->next;
+  }
+  freeStringList(&list);
+  FREE(str);
+}
+
 void findSystemJava(LauncherProperties *props) {
     // install bundled JVMs if any
     if(isTerminated(props)) return;
@@ -759,7 +785,12 @@ void findSystemJava(LauncherProperties *props) {
         writeMessageA(props, OUTPUT_LEVEL_NORMAL, 0, "Search java in environment variables", 1);
         searchJavaFromEnvVariables(props);
     }
-    
+
+    if (isTerminated(props)) return;
+    if (props->java == NULL) {
+      writeMessageA(props, OUTPUT_LEVEL_NORMAL, 0, "Search java in executable paths", 1);
+      searchJavaOnPath(props);
+    }
     // search JVM in the registry
     if(isTerminated(props)) return;
     if(props->java==NULL) {        

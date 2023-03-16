@@ -81,15 +81,15 @@ DWORD is7() {
     return (id == VER_PLATFORM_WIN32_NT && major == 6 && minor == 1 && type == VER_NT_WORKSTATION) ? 1 : 0;
 }
 
-typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
-LPFN_ISWOW64PROCESS fnIsWow64Process;
-
 void initWow64()
 {
-    IsWow64 = FALSE;
+    typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 
-    fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle(TEXT("kernel32")),"IsWow64Process");
-  
+    IsWow64 = FALSE;
+    // Have to ignore the warning here:
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+    LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle(TEXT("kernel32")),"IsWow64Process");
+#pragma GCC diagnostic pop
     if (NULL != fnIsWow64Process)
     {
         if (!fnIsWow64Process(GetCurrentProcess(),&IsWow64))

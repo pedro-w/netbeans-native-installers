@@ -15,17 +15,26 @@
 # specific language governing permissions and limitations
 # under the License.
 
-TMPFLD = ../../../../../target/tmp/
 OFLD = ../../../../../target/cleaner/
 
+CC=i686-w64-mingw32-gcc
+CFLAGS=-Os -s -DARCHITECTURE=32 -W -Wall -Wl,--nxcompat -Wl,--dynamicbase \
+	   -Wl,--no-seh -Wl,--no-insert-timestamp -mwindows
+LDFLAGS=-static -static-libstdc++ -static-libgcc
+LDLIBS=-lstdc++ -lcomctl32 -luserenv
+
+SRCS=src/main.c
+INCS=
 all: prepfolder cleaner.exe
 
 prepfolder:
-	mkdir -p $(TMPFLD)
 	mkdir -p $(OFLD)
 
 clean:
-	rm -f *.res *.exe *.dll
+	-rm -f $(OFLD)cleaner.exe
 
-cleaner.exe: src/main.c
-	i686-w64-mingw32-gcc -s -DARCHITECTURE=32 -Wl,--nxcompat -Wl,--dynamicbase -Wl,--no-seh -Wl,--no-insert-timestamp -mwindows src/main.c -o$(OFLD)cleaner.exe -static -lstdc++ -static-libstdc++ -static-libgcc
+cleaner.exe: $(OFLD)cleaner.exe
+
+$(OFLD)cleaner.exe: $(SRCS) $(INCS)
+	$(LINK.c) $(SRCS) -o$@ $(LDLIBS)
+

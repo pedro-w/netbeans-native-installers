@@ -320,6 +320,7 @@ WCHAR * escapeString(const WCHAR * string) {
                     result[r++] = '\\';
                     bsCounter--;
                 } while(bsCounter>0);
+		break;
             default:
                 bsCounter = 0;                
                 break;
@@ -537,6 +538,21 @@ StringListEntry * addStringToList(StringListEntry * top, WCHAR * str) {
     return ss;
 }
 
+
+StringListEntry * splitStringToList(StringListEntry * top, WCHAR * strlist, WCHAR sep) {
+  if (strlist != NULL) {
+    WCHAR * start = strlist;
+    while (*strlist != 0) {
+      if (*strlist == 0 || *strlist == sep) {
+	top = addStringToList(top, appendStringNW(NULL, 0, start, strlist - start));
+	start = ++strlist;
+      } else {
+	++strlist;
+      }
+    }
+  }
+  return top;
+}
 
 DWORD getLineSeparatorNumber(char *str) {
     DWORD result = 0;
