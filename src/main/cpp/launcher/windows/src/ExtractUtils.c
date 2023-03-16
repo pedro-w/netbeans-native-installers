@@ -37,22 +37,14 @@ void skipLauncherStub(LauncherProperties *props, DWORD stubSize) {
   HANDLE hFileRead = props->handler;
 
   if (hFileRead != INVALID_HANDLE_VALUE) {
-    // just read stub data.. no need to write it anywhere
-    DWORD read = 0;
-    char *offsetbuf = newpChar(stubSize);
-    DWORD sizeLeft = stubSize;
-    while (ReadFile(hFileRead, offsetbuf, sizeLeft, &read, 0) && sizeLeft &&
-           read) {
-      sizeLeft -= read;
-      addProgressPosition(props, read);
-      if (sizeLeft == 0)
-        break;
-      if (read == 0) { // we need some more bytes to read but we can`t to read
-        props->status = ERROR_INTEGRITY;
-        break;
-      }
+    DWORD status = SetFilePointer(hFileRead, (LONG)stubSize, NULL, FILE_BEGIN);
+    if (status == INVALID_SET_FILE_POINTER) {
+      props->status = ERROR_INTEGRITY;
+    } else {
+      TCHAR tmp[128];
+      wsprintf(tmp, TEXT("Stub, skipped to %ld"), status);
+      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, tmp, 1);
     }
-    FREE(offsetbuf);
   }
 }
 
@@ -60,25 +52,25 @@ void skipStub(LauncherProperties *props) {
   if (props->isOnlyStub) {
     LPTSTR os = NULL;
     props->status = EXIT_CODE_STUB;
-    os = appendString(os, "It`s only the launcher stub.\nOS: ");
+    os = appendString(os, TEXT("It`s only the launcher stub.\nOS: "));
     if (is9x())
-      os = appendString(os, "Windows 9x");
+      os = appendString(os, TEXT("Windows 9x"));
     if (isNT())
-      os = appendString(os, "Windows NT");
+      os = appendString(os, TEXT("Windows NT"));
     if (is2k())
-      os = appendString(os, "Windows 2000");
+      os = appendString(os, TEXT("Windows 2000"));
     if (isXP())
-      os = appendString(os, "Windows XP");
+      os = appendString(os, TEXT("Windows XP"));
     if (is2003())
-      os = appendString(os, "Windows 2003");
+      os = appendString(os, TEXT("Windows 2003"));
     if (isVista())
-      os = appendString(os, "Windows Vista");
+      os = appendString(os, TEXT("Windows Vista"));
     if (is2008())
-      os = appendString(os, "Windows 2008");
+      os = appendString(os, TEXT("Windows 2008"));
     if (is7())
-      os = appendString(os, "Windows 7");
+      os = appendString(os, TEXT("Windows 7"));
     if (IsWow64)
-      os = appendString(os, " x64");
+      os = appendString(os, TEXT(" x64"));
     showMessage(props, os, 0);
     FREE(os);
   } else {
@@ -94,7 +86,7 @@ void skipStub(LauncherProperties *props) {
 void modifyRestBytes(SizedString *rest, DWORD start) {
 
   rest->length -= start;
-  memcpy(rest->bytes, rest->bytes + start, rest->length);
+  memmove(rest->bytes, rest->bytes + start, rest->length);
 }
 // Move from 'rest' into 'result' up to a '\0', either in unicode (i.e. UTF-16)
 // mode or not-unicode mode
@@ -144,7 +136,6 @@ void readString(LauncherProperties *props, SizedString *result,
   }
 
   // we need to read file for more data to find \0 character...
-
   buf = (BYTE *)newpChar(bufferSize);
   while (ReadFile(hFileRead, buf, bufferSize, &read, 0)) {
     addProgressPosition(props, read);
@@ -168,10 +159,11 @@ void readNumber(LauncherProperties *props, DWORD *result) {
   if (isOK(props)) {
 
     SizedString *numberString = createSizedString();
-    DWORD i = 0;
+    DWORD i;
     DWORD number = 0;
 
-    readString(props, numberString, 0);
+    readString(props, numberString, FALSE);
+
     if (!isOK(props)) {
       freeSizedString(&numberString);
       writeMessage(props, OUTPUT_LEVEL_DEBUG, 1,
@@ -191,7 +183,7 @@ void readNumber(LauncherProperties *props, DWORD *result) {
       return;
     }
 
-    for (; i < numberString->length; i++) {
+    for (i = 0; i < numberString->length; i++) {
       char c = numberString->bytes[i];
       if (c >= '0' && c <= '9') {
         number = number * 10 + (c - '0');
@@ -211,9 +203,9 @@ void readNumber(LauncherProperties *props, DWORD *result) {
         writeMessage(props, OUTPUT_LEVEL_DEBUG, 1,
                      TEXT("Can`t read number from string (unexpected error):"),
                      1);
-        // TODO this cast is almost certainly wrong
-        writeMessage(props, OUTPUT_LEVEL_DEBUG, 1, (LPTSTR)numberString->bytes,
-                     1);
+        LPTSTR what = createTCHAR(numberString);
+        writeMessage(props, OUTPUT_LEVEL_DEBUG, 1, what, 1);
+        FREE(what);
         props->status = ERROR_INTEGRITY;
         break;
       }
@@ -242,8 +234,26 @@ void readStringWithDebug(LauncherProperties *props, LPTSTR *dest,
         TEXT("[ERROR] Can`t read string !! Seems to be integrity error"), 1);
     return;
   }
+  /*
+  int fl= IS_TEXT_UNICODE_UNICODE_MASK|IS_TEXT_UNICODE_REVERSE_MASK;
+  BOOL itu = IsTextUnicode(sizedStr->bytes, sizedStr->length, &fl);
+  if (fl & IS_TEXT_UNICODE_STATISTICS) {
+      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("unicode stats"), 1);
+  }
+  if (fl & IS_TEXT_UNICODE_REVERSE_STATISTICS) {
+      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("reverse unicode stats"),
+  1);
+  }
+  if (fl & IS_TEXT_UNICODE_SIGNATURE) {
+      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("unicode sig"), 1);
+  }
+  if (fl & IS_TEXT_UNICODE_REVERSE_SIGNATURE) {
+      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("reverse unicode sig"),
+  1);
+  }
+  */
   if (isUnicode) {
-#ifdef _UNICODE
+#ifdef UNICODE
     *dest = createWCHAR(sizedStr);
 #else
     LPWSTR tmp = createWCHAR(sizedStr);
@@ -251,8 +261,8 @@ void readStringWithDebug(LauncherProperties *props, LPTSTR *dest,
     FREE(tmp);
 #endif
   } else {
-#ifdef _UNICODE
-    LPSTR tmp = createCHAR(sz);
+#ifdef UNICODE
+    LPSTR tmp = createCHAR(sizedStr);
     *dest = toWCHAR(tmp);
     FREE(tmp);
 #else
@@ -328,7 +338,7 @@ void readBigNumberWithDebug(LauncherProperties *props, int64t *dest,
   }
   dest->High = high;
   dest->Low = low;
-  writeint64t(props, OUTPUT_LEVEL_DEBUG, 0, "", dest, 1);
+  writeint64t(props, OUTPUT_LEVEL_DEBUG, 0, TEXT(""), dest, 1);
 }
 
 // returns: ERROR_OK, ERROR_INPUTOUPUT, ERROR_INTEGRITY
@@ -418,9 +428,10 @@ void extractDataToFile(LauncherProperties *props, LPTSTR output,
     CloseHandle(hFileWrite);
     crc32 = ~crc32;
     if (isOK(props) && crc32 != expectedCRC) {
-      writeDWORD(props, OUTPUT_LEVEL_DEBUG, 0, "expected CRC : ", expectedCRC,
+      writeDWORD(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("expected CRC : "),
+                 expectedCRC, 1);
+      writeDWORD(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("real     CRC : "), crc32,
                  1);
-      writeDWORD(props, OUTPUT_LEVEL_DEBUG, 0, "real     CRC : ", crc32, 1);
       *status = ERROR_INTEGRITY;
     }
   }
@@ -435,7 +446,7 @@ void extractFileToDir(LauncherProperties *props, LPTSTR *resultFile) {
   readStringWithDebug(props, &fileName, TEXT("file name"), TRUE);
 
   fileLength = newint64_t(0, 0);
-  readBigNumberWithDebug(props, fileLength, "file length ");
+  readBigNumberWithDebug(props, fileLength, TEXT("file length "));
 
   readNumberWithDebug(props, &crc, TEXT("CRC32"));
 
@@ -462,21 +473,23 @@ void extractFileToDir(LauncherProperties *props, LPTSTR *resultFile) {
     FREE(dir);
     if (isOK(props)) {
       writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
-                   "   ... starting data extraction", 1);
-      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "   ... output file is ", 0);
+                   TEXT("   ... starting data extraction"), 1);
+      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("   ... output file is "),
+                   0);
       writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, fileName, 1);
       extractDataToFile(props, fileName, fileLength, crc);
-      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "   ... extraction finished",
-                   1);
+      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
+                   TEXT("   ... extraction finished"), 1);
       *resultFile = fileName;
     } else {
       writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
-                   "   ... data extraction canceled", 1);
+                   TEXT("   ... data extraction canceled"), 1);
     }
   } else {
-    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
-                 "Error! File name can`t be null. Seems to be integrity error!",
-                 1);
+    writeMessage(
+        props, OUTPUT_LEVEL_DEBUG, 0,
+        TEXT("Error! File name can`t be null. Seems to be integrity error!"),
+        1);
     *resultFile = NULL;
     props->status = ERROR_INTEGRITY;
   }
@@ -492,7 +505,7 @@ void loadI18NStrings(LauncherProperties *props) {
   DWORD numberOfLocales = 0;
   DWORD numberOfProperties = 0;
 
-  readNumberWithDebug(props, &numberOfLocales, "number of locales");
+  readNumberWithDebug(props, &numberOfLocales, TEXT("number of locales"));
   if (!isOK(props))
     return;
   if (numberOfLocales == 0) {
@@ -500,7 +513,7 @@ void loadI18NStrings(LauncherProperties *props) {
     return;
   }
 
-  readNumberWithDebug(props, &numberOfProperties, "i18n properties");
+  readNumberWithDebug(props, &numberOfProperties, TEXT("i18n properties"));
   if (!isOK(props))
     return;
   if (numberOfProperties == 0) {
@@ -655,8 +668,8 @@ void freeLauncherResource(LauncherResource **file) {
 }
 
 void extractLauncherResource(LauncherProperties *props, LauncherResource **file,
-                             char *name) {
-  char *typeStr = appendString(appendString(NULL, name), " type");
+                             LPCTSTR name) {
+  LPTSTR typeStr = appendString(appendString(NULL, name), TEXT(" type"));
   *file = newLauncherResource();
 
   readNumberWithDebug(props, &((*file)->type), typeStr);
@@ -728,7 +741,8 @@ void readLauncherResourceList(LauncherProperties *props,
 
   *list = newLauncherResourceList(num);
   for (i = 0; i < (*list)->size; i++) {
-    extractLauncherResource(props, &((*list)->items[i]), "launcher resource");
+    extractLauncherResource(props, &((*list)->items[i]),
+                            TEXT("launcher resource"));
     if (!isOK(props)) {
       LPTSTR str =
           appendString(appendString(NULL, TEXT("Error processing ")), name);
@@ -741,7 +755,7 @@ void readLauncherResourceList(LauncherProperties *props,
 
 void readLauncherProperties(LauncherProperties *props) {
   DWORD i = 0;
-  char *str = NULL;
+  LPTSTR str = NULL;
 
   readTCHARList(props, &(props->jvmArguments), TEXT("jvm arguments"));
   if (!isOK(props))
@@ -834,7 +848,7 @@ void extractData(LauncherProperties *props) {
     readLauncherResourceList(props, &(props->jars),
                              TEXT("bundled and external files"));
     if (isOK(props)) {
-      readLauncherResourceList(props, &(props->other), "other data");
+      readLauncherResourceList(props, &(props->other), TEXT("other data"));
     }
   }
 }

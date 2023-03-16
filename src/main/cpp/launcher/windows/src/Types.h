@@ -20,8 +20,9 @@
 #ifndef _Types_H
 #define _Types_H
 
-#include <tchar.h>
 #include <windows.h>
+
+#include <tchar.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,7 +37,7 @@ typedef struct {
   long minor;
   long micro;
   long update;
-  char build[128];
+  TCHAR build[128];
 } JavaVersion;
 
 typedef struct _javaProps {

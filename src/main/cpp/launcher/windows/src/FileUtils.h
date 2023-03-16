@@ -51,14 +51,14 @@ DWORD isDirectory(LPCTSTR path);
 LPTSTR getCurrentDirectory();
 LPTSTR getCurrentUserHome();
 
-void writeMessage(LauncherProperties *props, DWORD level, DWORD isErr,
+void writeMessage(LauncherProperties *props, DWORD level, BOOL isErr,
                   LPCTSTR message, DWORD needEndOfLine);
-void writeError(LauncherProperties *props, DWORD level, DWORD isErr,
+void writeError(LauncherProperties *props, DWORD level, BOOL isErr,
                 LPCTSTR message, LPCTSTR param, DWORD errorCode);
-void writeDWORD(LauncherProperties *props, DWORD level, DWORD isErr,
-                const char *message, DWORD value, DWORD needEndOfLine);
-void writeint64t(LauncherProperties *props, DWORD level, DWORD isErr,
-                 const char *message, int64t *value, DWORD needEndOfLine);
+void writeDWORD(LauncherProperties *props, DWORD level, BOOL isErr,
+                LPCTSTR message, DWORD value, DWORD needEndOfLine);
+void writeint64t(LauncherProperties *props, DWORD level, BOOL isErr,
+                 LPCTSTR message, int64t *value, DWORD needEndOfLine);
 
 void flushHandle(HANDLE hd);
 DWORD fileExists(LPCTSTR path);

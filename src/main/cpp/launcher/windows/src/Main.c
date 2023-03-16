@@ -26,13 +26,14 @@
 #include <commctrl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <tchar.h>
 #include <windows.h>
 
 #define HAVE_WCHAR_H 1
 
-char mainClassName[80] = "Main NBI Window Class";
-char mainTitle[80] = "NBI Launcher";
-char showMessageTitle[] = "\n<ShowMessage>\n";
+LPCTSTR mainClassName = TEXT("Main NBI Window Class");
+LPCTSTR mainTitle = TEXT("NBI Launcher");
+LPCTSTR showMessageTitle = TEXT("\n<ShowMessage>\n");
 HWND hwndPB = NULL;
 HWND hwndMain = NULL;
 HWND hwndErrorDetail = NULL;
@@ -236,7 +237,7 @@ void showError(LauncherProperties *props, LPCTSTR error,
   va_start(ap, varArgsNumber);
 
   while ((counter++) < varArgsNumber) {
-    TCHAR *arg = va_arg(ap, TCHAR *);
+    LPTSTR arg = va_arg(ap, LPTSTR);
     totalLength += getLength(arg);
   }
   va_end(ap);
@@ -626,23 +627,23 @@ DWORD createGui(LauncherProperties *props, HINSTANCE hInstance, HINSTANCE hi,
 }
 
 DWORD createEvents() {
-  initializationSuccess = CreateEventW(NULL, TRUE, FALSE, NULL);
+  initializationSuccess = CreateEvent(NULL, TRUE, FALSE, NULL);
   if (initializationSuccess == NULL) {
     return 0;
   }
-  initializationFailed = CreateEventW(NULL, TRUE, FALSE, NULL);
+  initializationFailed = CreateEvent(NULL, TRUE, FALSE, NULL);
   if (initializationFailed == NULL) {
     return 0;
   }
-  buttonPressed = CreateEventW(NULL, TRUE, FALSE, NULL);
+  buttonPressed = CreateEvent(NULL, TRUE, FALSE, NULL);
   if (buttonPressed == NULL) {
     return 0;
   }
-  closingWindowsRequired = CreateEventW(NULL, TRUE, FALSE, NULL);
+  closingWindowsRequired = CreateEvent(NULL, TRUE, FALSE, NULL);
   if (closingWindowsRequired == NULL) {
     return 0;
   }
-  closingWindowsConfirmed = CreateEventW(NULL, TRUE, FALSE, NULL);
+  closingWindowsConfirmed = CreateEvent(NULL, TRUE, FALSE, NULL);
   if (closingWindowsConfirmed == NULL) {
     return 0;
   }
@@ -660,6 +661,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hi, LPSTR lpCmdLine,
   globalInstance = hInstance;
   UNREFERENCED_PARAMETER(lpCmdLine);
   initWow64();
+
   if (is9x()) {
     MessageBoxA(0, "Windows 9X platform is not supported", "Message", MB_OK);
     status = EXIT_CODE_SYSTEM_ERROR;
@@ -668,6 +670,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hi, LPSTR lpCmdLine,
       status = EXIT_CODE_EVENTS_INITIALIZATION_ERROR;
     } else {
       LauncherProperties *props = createLauncherProperties();
+
       createLauncherThread(props);
       if (!createGui(props, hInstance, hi, nCmdShow)) {
         status = EXIT_CODE_GUI_INITIALIZATION_ERROR;

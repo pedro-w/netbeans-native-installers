@@ -84,13 +84,11 @@ DWORD readProcessStream(PROCESS_INFORMATION pi, HANDLE currentProcessStdin,
   return exitCode;
 }
 LPTSTR readHandle(HANDLE hRead) {
-  LPTSTR output = NULL;
   BYTE buf[STREAM_BUF_LENGTH];
-  DWORD total = 0;
   DWORD read;
   DWORD bytesRead;
   DWORD bytesAvailable;
-
+  SizedString *sz = createSizedString();
   while (1) {
     PeekNamedPipe(hRead, buf, STREAM_BUF_LENGTH - 1, &bytesRead,
                   &bytesAvailable, NULL);
@@ -99,10 +97,11 @@ LPTSTR readHandle(HANDLE hRead) {
     ReadFile(hRead, buf, STREAM_BUF_LENGTH - 1, &read, NULL);
     if (read == 0)
       break;
-    DWORD charsRead = read / sizeof(TCHAR);
-    output = appendStringN(output, total, (TCHAR *)buf, read);
-    total += charsRead;
+    // Always read in CHARs, may need to convert later
+    appendToSizedString(sz, buf, read);
   }
+  LPTSTR output = createTCHAR(sz);
+  freeSizedString(&sz);
   return output;
 }
 

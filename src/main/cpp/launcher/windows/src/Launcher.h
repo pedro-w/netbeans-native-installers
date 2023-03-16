@@ -20,10 +20,12 @@
 #ifndef _Launcher_H
 #define _Launcher_H
 
+#include <windows.h>
+
 #include "Errors.h"
 #include "JavaUtils.h"
 #include "Types.h"
-#include <windows.h>
+#include <tchar.h>
 
 #ifdef __cplusplus
 extern "C" {

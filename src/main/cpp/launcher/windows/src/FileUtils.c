@@ -81,14 +81,14 @@ void writeTimeStamp(HANDLE hd, DWORD need) {
   DWORD written;
   if (need == 1) {
     SYSTEMTIME t;
-    char *yearStr;
-    char *monthStr;
-    char *dayStr;
-    char *hourStr;
-    char *minuteStr;
-    char *secondStr;
-    char *msStr;
-    char *result = NULL;
+    LPTSTR yearStr;
+    LPTSTR monthStr;
+    LPTSTR dayStr;
+    LPTSTR hourStr;
+    LPTSTR minuteStr;
+    LPTSTR secondStr;
+    LPTSTR msStr;
+    LPTSTR result = NULL;
     GetLocalTime(&t);
     yearStr = word2charN(t.wYear, 2);
     monthStr = word2charN(t.wMonth, 2);
@@ -98,23 +98,23 @@ void writeTimeStamp(HANDLE hd, DWORD need) {
     secondStr = word2charN(t.wSecond, 2);
     msStr = word2charN(t.wMilliseconds, 3);
 
-    result = appendString(NULL, "[");
+    result = appendString(NULL, TEXT("["));
     result = appendString(result, yearStr);
-    result = appendString(result, "-");
+    result = appendString(result, TEXT("-"));
     result = appendString(result, monthStr);
-    result = appendString(result, "-");
+    result = appendString(result, TEXT("-"));
     result = appendString(result, dayStr);
-    result = appendString(result, " ");
+    result = appendString(result, TEXT(" "));
     result = appendString(result, hourStr);
-    result = appendString(result, ":");
+    result = appendString(result, TEXT(":"));
     result = appendString(result, minuteStr);
-    result = appendString(result, ":");
+    result = appendString(result, TEXT(":"));
     result = appendString(result, secondStr);
-    result = appendString(result, ".");
+    result = appendString(result, TEXT("."));
     result = appendString(result, msStr);
-    result = appendString(result, "]> ");
+    result = appendString(result, TEXT("]> "));
 
-    WriteFile(hd, result, sizeof(char) * getLength(result), &written, NULL);
+    WriteFile(hd, result, sizeof(TCHAR) * getLength(result), &written, NULL);
     FREE(result);
     FREE(yearStr);
     FREE(monthStr);
@@ -127,7 +127,7 @@ void writeTimeStamp(HANDLE hd, DWORD need) {
   }
 }
 
-void writeMessage(LauncherProperties *props, DWORD level, DWORD isErr,
+void writeMessage(LauncherProperties *props, DWORD level, BOOL isErr,
                   LPCTSTR message, DWORD needEndOfLine) {
   if (level >= props->outputLevel) {
     HANDLE hd = (isErr) ? props->stderrHandle : props->stdoutHandle;
@@ -147,7 +147,7 @@ void writeMessage(LauncherProperties *props, DWORD level, DWORD isErr,
   }
 }
 
-void writeDWORD(LauncherProperties *props, DWORD level, DWORD isErr,
+void writeDWORD(LauncherProperties *props, DWORD level, BOOL isErr,
                 LPCTSTR message, DWORD value, DWORD needEndOfLine) {
   LPTSTR dwordStr = DWORDtoTCHAR(value);
   writeMessage(props, level, isErr, message, 0);
@@ -155,14 +155,14 @@ void writeDWORD(LauncherProperties *props, DWORD level, DWORD isErr,
   FREE(dwordStr);
 }
 
-void writeint64t(LauncherProperties *props, DWORD level, DWORD isErr,
+void writeint64t(LauncherProperties *props, DWORD level, BOOL isErr,
                  LPCTSTR message, int64t *value, DWORD needEndOfLine) {
   LPTSTR str = int64ttoTCHAR(value);
   writeMessage(props, level, isErr, message, 0);
   writeMessage(props, level, isErr, str, needEndOfLine);
   FREE(str);
 }
-void writeError(LauncherProperties *props, DWORD level, DWORD isErr,
+void writeError(LauncherProperties *props, DWORD level, BOOL isErr,
                 LPCTSTR message, LPCTSTR param, DWORD errorCode) {
   LPTSTR err = getErrorDescription(errorCode);
   writeMessage(props, level, isErr, message, 0);

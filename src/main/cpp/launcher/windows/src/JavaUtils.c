@@ -17,8 +17,15 @@
  * under the License.
  */
 
-#include "JavaUtils.h"
+#ifdef UNICODE
+// because we use some of the CRT functions.
+#define _UNICODE
+#endif
+
+#include <windows.h>
+
 #include "FileUtils.h"
+#include "JavaUtils.h"
 #include "Launcher.h"
 #include "Main.h"
 #include "ProcessUtils.h"
@@ -26,6 +33,7 @@
 #include "StringUtils.h"
 #include "SystemUtils.h"
 #include <stdio.h>
+#include <tchar.h>
 #include <wchar.h>
 
 const DWORD JAVA_VERIFICATION_PROCESS_TIMEOUT = 10000; // 10sec
@@ -113,23 +121,20 @@ DWORD isJavaCompatible(JavaProperties *currentJava,
 
     if (check) {
       if (compatibleJava[i]->vendor != NULL) {
-        check =
-            (searchA(currentJava->vendor, compatibleJava[i]->vendor) != NULL)
-                ? check
-                : 0;
+        check = (search(currentJava->vendor, compatibleJava[i]->vendor) != NULL)
+                    ? check
+                    : 0;
       }
       if (compatibleJava[i]->osName != NULL) {
-        check =
-            (searchA(currentJava->osName, compatibleJava[i]->osName) != NULL)
-                ? check
-                : 0;
+        check = (search(currentJava->osName, compatibleJava[i]->osName) != NULL)
+                    ? check
+                    : 0;
       }
 
       if (compatibleJava[i]->osArch != NULL) {
-        check =
-            (searchA(currentJava->osArch, compatibleJava[i]->osArch) != NULL)
-                ? check
-                : 0;
+        check = (search(currentJava->osArch, compatibleJava[i]->osArch) != NULL)
+                    ? check
+                    : 0;
       }
       if (check) {
         return 1;
@@ -151,12 +156,12 @@ JavaVersion *getJavaVersionFromString(LPCTSTR string, DWORD *result) {
   long major = 0;
   while (*p != 0) {
     TCHAR c = *p++;
-    if (c >= '0' && c <= '9') {
-      major = (major)*10 + c - '0';
+    if (c >= TEXT('0') && c <= TEXT('9')) {
+      major = (major)*10 + c - TEXT('0');
       if (major > 999)
         return vers;
       continue;
-    } else if (c == '.' || c == '+') {
+    } else if (c == TEXT('.') || c == TEXT('+')) {
       break;
     } else {
       return vers;
@@ -167,8 +172,8 @@ JavaVersion *getJavaVersionFromString(LPCTSTR string, DWORD *result) {
   long minor = 0;
   while (*p != 0) {
     TCHAR c = *p;
-    if (c >= '0' && c <= '9') {
-      minor = (minor)*10 + c - '0';
+    if (c >= TEXT('0') && c <= TEXT('9')) {
+      minor = (minor)*10 + c - TEXT('0');
       p++;
       continue;
     }
@@ -183,20 +188,20 @@ JavaVersion *getJavaVersionFromString(LPCTSTR string, DWORD *result) {
   vers->update = 0;
   ZERO(vers->build, 128);
 
-  if (p[0] == '.') { // micro...
+  if (p[0] == TEXT('.')) { // micro...
     p++;
     while (*p != 0) {
       TCHAR c = *p;
-      if (c >= '0' && c <= '9') {
-        vers->micro = (vers->micro) * 10 + c - '0';
+      if (c >= TEXT('0') && c <= TEXT('9')) {
+        vers->micro = (vers->micro) * 10 + c - TEXT('0');
         p++;
         continue;
       } else if (c == '_') { // update
         p++;
         while ((c = *p) != 0) {
           p++;
-          if (c >= '0' && c <= '9') {
-            vers->update = (vers->update) * 10 + c - '0';
+          if (c >= TEXT('0') && c <= TEXT('9')) {
+            vers->update = (vers->update) * 10 + c - TEXT('0');
             continue;
           } else {
             break;
@@ -206,7 +211,7 @@ JavaVersion *getJavaVersionFromString(LPCTSTR string, DWORD *result) {
         if (*p != 0)
           p++;
       }
-      if (c == '-' && *p != 0) { // build number
+      if (c == TEXT('-') && *p != 0) { // build number
         lstrcpyn(vers->build, p, min(127, getLength(p) + 1));
       }
       break;
@@ -232,39 +237,40 @@ DWORD getJavaPropertiesFromOutput(LauncherProperties *props, LPTSTR str,
     JavaVersion *vers;
 
     start = str;
-    end = search(start, "\n");
+    end = search(start, TEXT("\n"));
 
     javaVersion =
         appendStringN(NULL, 0, start, getLength(start) - getLength(end) - 1);
-    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "    java.version =  ", 0);
+    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("    java.version =  "), 0);
     writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, javaVersion, 1);
     start = end + 1;
-    end = search(start, "\n");
+    end = search(start, TEXT("\n"));
 
     javaVmVersion =
         appendStringN(NULL, 0, start, getLength(start) - getLength(end) - 1);
-    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "    java.vm.version = ", 0);
+    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("    java.vm.version = "),
+                 0);
     writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, javaVmVersion, 1);
     start = end + 1;
-    end = search(start, "\n");
+    end = search(start, TEXT("\n"));
 
     javaVendor =
         appendStringN(NULL, 0, start, getLength(start) - getLength(end) - 1);
-    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "    java.vendor = ", 0);
+    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("    java.vendor = "), 0);
     writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, javaVendor, 1);
     start = end + 1;
-    end = search(start, "\n");
+    end = search(start, TEXT("\n"));
 
     osName =
         appendStringN(NULL, 0, start, getLength(start) - getLength(end) - 1);
-    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "    os.name = ", 0);
+    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("    os.name = "), 0);
     writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, osName, 1);
     start = end + 1;
-    end = searchA(start, "\n");
+    end = search(start, TEXT("\n"));
 
     osArch =
         appendStringN(NULL, 0, start, getLength(start) - getLength(end) - 1);
-    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "    os.arch = ", 0);
+    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("    os.arch = "), 0);
     writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, osArch, 2);
 
     string = javaVersion;
@@ -276,12 +282,13 @@ DWORD getJavaPropertiesFromOutput(LauncherProperties *props, LPTSTR str,
       }
     }
     writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
-                 "... getting java version from string : ", 0);
+                 TEXT("... getting java version from string : "), 0);
     writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, string, 1);
 
     vers = getJavaVersionFromString(string, &result);
     if (javaProps != NULL) {
-      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "... some java there", 1);
+      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("... some java there"),
+                   1);
       *javaProps = (JavaProperties *)LocalAlloc(LPTR, sizeof(JavaProperties));
       (*javaProps)->version = vers;
       (*javaProps)->vendor = javaVendor;
@@ -290,7 +297,7 @@ DWORD getJavaPropertiesFromOutput(LauncherProperties *props, LPTSTR str,
       (*javaProps)->javaHome = NULL;
       (*javaProps)->javaExe = NULL;
     } else {
-      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "... no java  there", 1);
+      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("... no java  there"), 1);
       FREE(javaVendor);
       FREE(osName);
       FREE(osArch);
@@ -313,7 +320,8 @@ void getJavaProperties(LPCTSTR location, LauncherProperties *props,
     HANDLE hRead;
     HANDLE hWrite;
 
-    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "... java hierarchy there", 1);
+    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("... java hierarchy there"),
+                 1);
     // <location>\bin\java.exe exists
 
     appendCommandLineArgument(&command, javaExecutable);
@@ -329,7 +337,8 @@ void getJavaProperties(LPCTSTR location, LauncherProperties *props,
     if (props->status != ERROR_ON_EXECUTE_PROCESS &&
         props->status != ERROR_PROCESS_TIMEOUT) {
       LPTSTR output = readHandle(hRead);
-      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "           output :\n", 0);
+      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("           output :\n"),
+                   0);
       writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, output, 1);
 
       props->status = getJavaPropertiesFromOutput(props, output, javaProps);
@@ -346,7 +355,8 @@ void getJavaProperties(LPCTSTR location, LauncherProperties *props,
     CloseHandle(hWrite);
     CloseHandle(hRead);
   } else {
-    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "... not a java hierarchy", 1);
+    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("... not a java hierarchy"),
+                 1);
     props->status = ERROR_INPUTOUPUT;
   }
   FREE(libDirectory);
@@ -359,15 +369,15 @@ LPTSTR getJavaVersionFormatted(const JavaProperties *javaProps) {
     JavaVersion *version = javaProps->version;
     if (version != NULL) {
       TCHAR tmp[128];
-      wsprintf(tmp, "%ld.%ld.%ld", version->major, version->minor,
+      wsprintf(tmp, TEXT("%ld.%ld.%ld"), version->major, version->minor,
                version->micro);
       result = appendString(NULL, tmp);
       if (version->update != 0) {
-        wsprintf(tmp, "_%02ld", version->update);
+        wsprintf(tmp, TEXT("_%02ld"), version->update);
         result = appendString(result, tmp);
       }
       if (getLength(version->build) > 0) {
-        result = appendString(result, "-");
+        result = appendString(result, TEXT("-"));
         result = appendString(result, version->build);
       }
     }
@@ -409,7 +419,7 @@ void searchCurrentJavaRegistry(LauncherProperties *props, BOOL access64key) {
   DWORD keysNumber = sizeof(JAVA_REGISTRY_KEYS) / sizeof(JAVA_REGISTRY_KEYS[0]);
 
   writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
-               "Search java in CurrentVersion values...", 1);
+               TEXT("Search java in CurrentVersion values..."), 1);
 
   for (k = 0; k < rootKeysNumber; k++) {
     for (i = 0; i < keysNumber; i++) {
@@ -422,21 +432,21 @@ void searchCurrentJavaRegistry(LauncherProperties *props, BOOL access64key) {
         if (value != NULL) {
           LPTSTR javaHome = getStringValuePC(rootKeys[k], keys[i], value,
                                              JAVA_HOME, access64key);
-          writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "... ", 0);
+          writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("... "), 0);
           writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
                        (rootKeys[k] == HKEY_LOCAL_MACHINE)
-                           ? "HKEY_LOCAL_MACHINE"
-                           : "HKEY_CURRENT_USER",
+                           ? TEXT("HKEY_LOCAL_MACHINE")
+                           : TEXT("HKEY_CURRENT_USER"),
                        0);
-          writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "\\", 0);
+          writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("\\"), 0);
           writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, keys[i], 0);
-          writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "\\", 0);
+          writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("\\"), 0);
           writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, CURRENT_VERSION, 0);
-          writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "->", 0);
+          writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("->"), 0);
           writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, value, 0);
-          writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "[", 0);
+          writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("["), 0);
           writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, JAVA_HOME, 0);
-          writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "] = ", 0);
+          writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("] = "), 0);
           writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, javaHome, 1);
 
           FREE(value);
@@ -452,8 +462,8 @@ void searchCurrentJavaRegistry(LauncherProperties *props, BOOL access64key) {
   }
 
   // we found no CurrentVersion java... just search for other possible keys
-  writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "Search java in other values...",
-               1);
+  writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
+               TEXT("Search java in other values..."), 1);
 
   for (k = 0; k < rootKeysNumber; k++) {
     for (i = 0; i < keysNumber; i++) {
@@ -478,16 +488,16 @@ void searchCurrentJavaRegistry(LauncherProperties *props, BOOL access64key) {
 
               writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
                            (rootKeys[k] == HKEY_LOCAL_MACHINE)
-                               ? "HKEY_LOCAL_MACHINE"
-                               : "HKEY_CURRENT_USER",
+                               ? TEXT("HKEY_LOCAL_MACHINE")
+                               : TEXT("HKEY_CURRENT_USER"),
                            0);
-              writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "\\", 0);
+              writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("\\"), 0);
               writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, keys[i], 0);
-              writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "\\", 0);
+              writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("\\"), 0);
               writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, buffer, 0);
-              writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "[", 0);
+              writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("["), 0);
               writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, JAVA_HOME, 0);
-              writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "] = ", 0);
+              writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("] = "), 0);
               writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, javaHome, 1);
 
               trySetCompatibleJava(javaHome, props);
@@ -528,9 +538,9 @@ void searchJavaFromEnvVariables(LauncherProperties *props) {
     buffer[0] = '\0';
     ret = GetEnvironmentVariable(ENVS[i], buffer, MAX_PATH);
     if (ret > 0 && ret <= MAX_PATH) {
-      writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "    <", 0);
+      writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("    <"), 0);
       writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, ENVS[i], 0);
-      writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "> = ", 0);
+      writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("> = "), 0);
       writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, buffer, 1);
       trySetCompatibleJava(buffer, props);
       if (props->java != NULL) {
@@ -550,7 +560,7 @@ void unpackJars(LauncherProperties *props, LPCTSTR jvmDir, LPCTSTR startDir,
   attrs = GetFileAttributes(startDir);
   if (attrs == INVALID_FILE_ATTRIBUTES) {
     writeError(props, OUTPUT_LEVEL_DEBUG, 1,
-               "Error! Can`t get attributes of the file : ", startDir,
+               TEXT("Error! Can`t get attributes of the file : "), startDir,
                GetLastError());
     return;
   }
@@ -565,10 +575,12 @@ void unpackJars(LauncherProperties *props, LPCTSTR jvmDir, LPCTSTR startDir,
 
     if (hFind == INVALID_HANDLE_VALUE) {
       writeError(props, OUTPUT_LEVEL_DEBUG, 1,
-                 "Error! Can`t file with pattern ", DirSpec, GetLastError());
+                 TEXT("Error! Can`t file with pattern "), DirSpec,
+                 GetLastError());
     } else {
       // List all the other files in the directory.
-      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "... listing directory ", 0);
+      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("... listing directory "),
+                   0);
       writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, startDir, 1);
 
       while (FindNextFile(hFind, &FindFileData) != 0 && isOK(props)) {
@@ -578,7 +590,8 @@ void unpackJars(LauncherProperties *props, LPCTSTR jvmDir, LPCTSTR startDir,
               appendString(appendString(appendString(NULL, startDir), FILE_SEP),
                            FindFileData.cFileName);
           if (isDirectory(child)) {
-            writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "... directory : ", 0);
+            writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("... directory : "),
+                         0);
             writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, child, 1);
             unpackJars(props, jvmDir, child, unpack200exe);
           } else if (search(FindFileData.cFileName, JAR_PACK_GZ_SUFFIX) !=
@@ -589,9 +602,11 @@ void unpackJars(LauncherProperties *props, LPCTSTR jvmDir, LPCTSTR startDir,
                               getLength(FindFileData.cFileName) -
                                   getLength(PACK_GZ_SUFFIX)));
             LPTSTR unpackCommand = NULL;
-            writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "... packed jar : ", 0);
+            writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
+                         TEXT("... packed jar : "), 0);
             writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, child, 1);
-            writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "... jar name : ", 0);
+            writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("... jar name : "),
+                         0);
             writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, jarName, 1);
 
             appendCommandLineArgument(&unpackCommand, unpack200exe);
@@ -607,10 +622,11 @@ void unpackJars(LauncherProperties *props, LPCTSTR jvmDir, LPCTSTR startDir,
             if (!isOK(props)) {
               if (props->status == ERROR_PROCESS_TIMEOUT) {
                 writeMessage(props, OUTPUT_LEVEL_DEBUG, 1,
-                             "... could not unpack file : timeout", 1);
+                             TEXT("... could not unpack file : timeout"), 1);
               } else {
                 writeMessage(props, OUTPUT_LEVEL_DEBUG, 1,
-                             "... an error occured unpacking the file", 1);
+                             TEXT("... an error occured unpacking the file"),
+                             1);
               }
               props->exitCode = props->status;
             }
@@ -624,7 +640,8 @@ void unpackJars(LauncherProperties *props, LPCTSTR jvmDir, LPCTSTR startDir,
       FindClose(hFind);
       if (dwError != ERROR_NO_MORE_FILES) {
         writeError(props, OUTPUT_LEVEL_DEBUG, 1,
-                   "Error! Can`t find file with pattern : ", DirSpec, dwError);
+                   TEXT("Error! Can`t find file with pattern : "), DirSpec,
+                   dwError);
       }
     }
     FREE(DirSpec);
@@ -638,7 +655,7 @@ void installJVM(LauncherProperties *props, LauncherResource *jvm) {
   createDirectory(props, jvmDir);
   if (!isOK(props)) {
     writeMessage(props, OUTPUT_LEVEL_DEBUG, 1,
-                 "... cannot create dir for JVM extraction :", 0);
+                 TEXT("... cannot create dir for JVM extraction :"), 0);
     writeMessage(props, OUTPUT_LEVEL_DEBUG, 1, jvmDir, 1);
     FREE(jvmDir);
     return;
@@ -655,11 +672,11 @@ void installJVM(LauncherProperties *props, LauncherResource *jvm) {
   if (!isOK(props)) {
     if (props->status == ERROR_PROCESS_TIMEOUT) {
       writeMessage(props, OUTPUT_LEVEL_DEBUG, 1,
-                   "... could not extract JVM : timeout", 1);
+                   TEXT("... could not extract JVM : timeout"), 1);
     } else {
-      writeMessage(props, OUTPUT_LEVEL_DEBUG, 1,
-                   "... an error occured during running JVM extraction file",
-                   1);
+      writeMessage(
+          props, OUTPUT_LEVEL_DEBUG, 1,
+          TEXT("... an error occured during running JVM extraction file"), 1);
     }
     props->exitCode = props->status;
   } else {
@@ -668,12 +685,13 @@ void installJVM(LauncherProperties *props, LauncherResource *jvm) {
     if (fileExists(unpack200exe)) {
       unpackJars(props, jvmDir, jvmDir, unpack200exe);
     } else {
-      writeMessage(props, OUTPUT_LEVEL_DEBUG, 1, "... no unpack200 command", 1);
+      writeMessage(props, OUTPUT_LEVEL_DEBUG, 1,
+                   TEXT("... no unpack200 command"), 1);
       props->status = ERROR_BUNDLED_JVM_EXTRACTION;
     }
     if (!isOK(props)) {
       writeMessage(props, OUTPUT_LEVEL_DEBUG, 1,
-                   "Could not unpack200 the JVM jars", 1);
+                   TEXT("Could not unpack200 the JVM jars"), 1);
     }
     FREE(unpack200exe);
   }
@@ -684,13 +702,13 @@ void installJVM(LauncherProperties *props, LauncherResource *jvm) {
 void installBundledJVMs(LauncherProperties *props) {
   if (props->jvms->size > 0) {
     DWORD i = 0;
-    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "... search for bundled JVMs",
-                 1);
+    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
+                 TEXT("... search for bundled JVMs"), 1);
     for (i = 0; i < props->jvms->size; i++) {
       if (props->jvms->items[i]->type == 0 && !isTerminated(props)) {
         resolvePath(props, props->jvms->items[i]);
-        writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "... install bundled JVM ",
-                     0);
+        writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
+                     TEXT("... install bundled JVM "), 0);
         writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
                      props->jvms->items[i]->resolved, 1);
         installJVM(props, props->jvms->items[i]);
@@ -706,7 +724,7 @@ void installBundledJVMs(LauncherProperties *props) {
           }
         } else {
           writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
-                       "... error occured during JVM extraction", 1);
+                       TEXT("... error occured during JVM extraction"), 1);
           props->status = ERROR_BUNDLED_JVM_EXTRACTION;
           return;
         }
@@ -717,15 +735,15 @@ void installBundledJVMs(LauncherProperties *props) {
 void searchJavaInstallationFolder(LauncherProperties *props) {
   TCHAR executablePath[MAX_PATH];
   GetModuleFileName(0, executablePath, MAX_PATH);
-  TCHAR *pch = _tcsrchr(executablePath, '\\');
-  TCHAR installationFolder[MAX_PATH] = "";
+  TCHAR *pch = _tcsrchr(executablePath, TEXT('\\'));
+  TCHAR installationFolder[MAX_PATH] = {0};
   int i;
   int end = (int)(pch - executablePath);
 
   for (i = 0; i < end; i++) {
     installationFolder[i] = executablePath[i];
   }
-  LPSTR nestedJreFolder = _tcscat(installationFolder, TEXT("\\bin\\jre"));
+  LPTSTR nestedJreFolder = _tcscat(installationFolder, TEXT("\\bin\\jre"));
 
   // check if JRE is in installation folder
   if (!fileExists(installationFolder)) {
@@ -747,7 +765,7 @@ void searchJavaInstallationFolder(LauncherProperties *props) {
   appendCommandLineArgument(&command, TEXT("/y"));
 
   writeMessage(props, OUTPUT_LEVEL_DEBUG, 1,
-               "Copying nested JRE to temp folder", 0);
+               TEXT("Copying nested JRE to temp folder"), 0);
 
   executeCommand(props, command, NULL, JVM_EXTRACTION_TIMEOUT,
                  props->stdoutHandle, props->stderrHandle,
@@ -761,7 +779,7 @@ void searchJavaSystemLocations(LauncherProperties *props) {
   if (props->jvms->size > 0) {
     DWORD i = 0;
     writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
-                 "Search jvm using some predefined locations", 1);
+                 TEXT("Search jvm using some predefined locations"), 1);
     for (i = 0; i < props->jvms->size && !isTerminated(props); i++) {
       resolvePath(props, props->jvms->items[i]);
       if (props->jvms->items[i]->type !=
@@ -813,13 +831,13 @@ void findSystemJava(LauncherProperties *props) {
   // search in <installation folder>/bin/jre
   if (props->java == NULL) {
     writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
-                 "Search java in installation folder", 1);
+                 TEXT("Search java in installation folder"), 1);
     searchJavaInstallationFolder(props);
   }
   // search JVM in the system paths
   if (props->java == NULL) {
     writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
-                 "Search java in the system paths", 1);
+                 TEXT("Search java in the system paths"), 1);
     searchJavaSystemLocations(props);
   }
 
@@ -827,7 +845,7 @@ void findSystemJava(LauncherProperties *props) {
     return;
   if (props->java == NULL) {
     writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
-                 "Search java in environment variables", 1);
+                 TEXT("Search java in environment variables"), 1);
     searchJavaFromEnvVariables(props);
   }
 
@@ -835,7 +853,7 @@ void findSystemJava(LauncherProperties *props) {
     return;
   if (props->java == NULL) {
     writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
-                 "Search java in executable paths", 1);
+                 TEXT("Search java in executable paths"), 1);
     searchJavaOnPath(props);
   }
   // search JVM in the registry
@@ -844,12 +862,12 @@ void findSystemJava(LauncherProperties *props) {
   if (props->java == NULL) {
     if (IsWow64) {
       writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
-                   "Search java in 64-bit registry", 1);
+                   TEXT("Search java in 64-bit registry"), 1);
       searchCurrentJavaRegistry(props, 1);
     }
     if (props->java == NULL) {
       writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
-                   "Search java in 32-bit registry", 1);
+                   TEXT("Search java in 32-bit registry"), 1);
       searchCurrentJavaRegistry(props, 0);
     }
   }
@@ -857,19 +875,19 @@ void findSystemJava(LauncherProperties *props) {
 
 void printJavaProperties(LauncherProperties *props, JavaProperties *javaProps) {
   if (javaProps != NULL) {
-    char *jv = getJavaVersionFormatted(javaProps);
-    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "Current Java:", 1);
-    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "       javaHome: ", 0);
+    LPTSTR jv = getJavaVersionFormatted(javaProps);
+    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("Current Java:"), 1);
+    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("       javaHome: "), 0);
     writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, javaProps->javaHome, 1);
-    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "        javaExe: ", 0);
+    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("        javaExe: "), 0);
     writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, javaProps->javaExe, 1);
-    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "        version: ", 0);
+    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("        version: "), 0);
     writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, jv, 1);
-    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "         vendor: ", 0);
+    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("         vendor: "), 0);
     writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, javaProps->vendor, 1);
-    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "        os.name: ", 0);
+    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("        os.name: "), 0);
     writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, javaProps->osName, 1);
-    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "        os.arch: ", 0);
+    writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("        os.arch: "), 0);
     writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, javaProps->osArch, 1);
     FREE(jv);
   }

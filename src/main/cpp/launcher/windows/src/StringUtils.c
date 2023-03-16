@@ -25,42 +25,42 @@
 #include <windows.h>
 #include <winnls.h>
 
-const char *JVM_NOT_FOUND_PROP = "nlw.jvm.notfoundmessage";
-const char *JVM_USER_DEFINED_ERROR_PROP = "nlw.jvm.usererror";
+LPCTSTR JVM_NOT_FOUND_PROP = TEXT("nlw.jvm.notfoundmessage");
+LPCTSTR JVM_USER_DEFINED_ERROR_PROP = TEXT("nlw.jvm.usererror");
 
-const char *JVM_UNSUPPORTED_VERSION_PROP = "nlw.jvm.unsupportedversion";
-const char *NOT_ENOUGH_FREE_SPACE_PROP = "nlw.freespace";
-const char *CANT_CREATE_TEMP_DIR_PROP = "nlw.tmpdir";
-const char *INTEGRITY_ERROR_PROP = "nlw.integrity";
-const char *OUTPUT_ERROR_PROP = "nlw.output.error";
-const char *JAVA_PROCESS_ERROR_PROP = "nlw.java.process.error";
-const char *EXTERNAL_RESOURE_LACK_PROP = "nlw.missing.external.resource";
-const char *BUNDLED_JVM_EXTRACT_ERROR_PROP = "nlw.bundled.jvm.extract.error";
-const char *BUNDLED_JVM_VERIFY_ERROR_PROP = "nlw.bundled.jvm.verify.error";
+LPCTSTR JVM_UNSUPPORTED_VERSION_PROP = TEXT("nlw.jvm.unsupportedversion");
+LPCTSTR NOT_ENOUGH_FREE_SPACE_PROP = TEXT("nlw.freespace");
+LPCTSTR CANT_CREATE_TEMP_DIR_PROP = TEXT("nlw.tmpdir");
+LPCTSTR INTEGRITY_ERROR_PROP = TEXT("nlw.integrity");
+LPCTSTR OUTPUT_ERROR_PROP = TEXT("nlw.output.error");
+LPCTSTR JAVA_PROCESS_ERROR_PROP = TEXT("nlw.java.process.error");
+LPCTSTR EXTERNAL_RESOURE_LACK_PROP = TEXT("nlw.missing.external.resource");
+LPCTSTR BUNDLED_JVM_EXTRACT_ERROR_PROP = TEXT("nlw.bundled.jvm.extract.error");
+LPCTSTR BUNDLED_JVM_VERIFY_ERROR_PROP = TEXT("nlw.bundled.jvm.verify.error");
 
-const char *ARG_OUTPUT_PROPERTY = "nlw.arg.output";
-const char *ARG_JAVA_PROP = "nlw.arg.javahome";
-const char *ARG_DEBUG_PROP = "nlw.arg.verbose";
-const char *ARG_TMP_PROP = "nlw.arg.tempdir";
-const char *ARG_CPA_PROP = "nlw.arg.classpatha";
-const char *ARG_CPP_PROP = "nlw.arg.classpathp";
-const char *ARG_EXTRACT_PROP = "nlw.arg.extract";
-const char *ARG_DISABLE_SPACE_CHECK = "nlw.arg.disable.space.check";
-const char *ARG_LOCALE_PROP = "nlw.arg.locale";
-const char *ARG_SILENT_PROP = "nlw.arg.silent";
-const char *ARG_HELP_PROP = "nlw.arg.help";
+LPCTSTR ARG_OUTPUT_PROPERTY = TEXT("nlw.arg.output");
+LPCTSTR ARG_JAVA_PROP = TEXT("nlw.arg.javahome");
+LPCTSTR ARG_DEBUG_PROP = TEXT("nlw.arg.verbose");
+LPCTSTR ARG_TMP_PROP = TEXT("nlw.arg.tempdir");
+LPCTSTR ARG_CPA_PROP = TEXT("nlw.arg.classpatha");
+LPCTSTR ARG_CPP_PROP = TEXT("nlw.arg.classpathp");
+LPCTSTR ARG_EXTRACT_PROP = TEXT("nlw.arg.extract");
+LPCTSTR ARG_DISABLE_SPACE_CHECK = TEXT("nlw.arg.disable.space.check");
+LPCTSTR ARG_LOCALE_PROP = TEXT("nlw.arg.locale");
+LPCTSTR ARG_SILENT_PROP = TEXT("nlw.arg.silent");
+LPCTSTR ARG_HELP_PROP = TEXT("nlw.arg.help");
 
-const char *MSG_CREATE_TMPDIR = "nlw.msg.create.tmpdir";
-const char *MSG_EXTRACT_DATA = "nlw.msg.extract";
-const char *MSG_JVM_SEARCH = "nlw.msg.jvmsearch";
-const char *MSG_SET_OPTIONS = "nlw.msg.setoptions";
-const char *MSG_RUNNING = "nlw.msg.running";
-const char *MSG_TITLE = "nlw.msg.title";
-const char *MSG_MESSAGEBOX_TITLE = "nlw.msg.messagebox.title";
-const char *MSG_PROGRESS_TITLE = "nlw.msg.progress.title";
+LPCTSTR MSG_CREATE_TMPDIR = TEXT("nlw.msg.create.tmpdir");
+LPCTSTR MSG_EXTRACT_DATA = TEXT("nlw.msg.extract");
+LPCTSTR MSG_JVM_SEARCH = TEXT("nlw.msg.jvmsearch");
+LPCTSTR MSG_SET_OPTIONS = TEXT("nlw.msg.setoptions");
+LPCTSTR MSG_RUNNING = TEXT("nlw.msg.running");
+LPCTSTR MSG_TITLE = TEXT("nlw.msg.title");
+LPCTSTR MSG_MESSAGEBOX_TITLE = TEXT("nlw.msg.messagebox.title");
+LPCTSTR MSG_PROGRESS_TITLE = TEXT("nlw.msg.progress.title");
 
-const char *EXIT_BUTTON_PROP = "nlw.msg.button.error";
-const char *MAIN_WINDOW_TITLE = "nlw.msg.main.title";
+LPCTSTR EXIT_BUTTON_PROP = TEXT("nlw.msg.button.error");
+LPCTSTR MAIN_WINDOW_TITLE = TEXT("nlw.msg.main.title");
 
 // adds string the the initial string and modifies totalWCHARs and capacity
 // initial - the beginning of the string
@@ -83,50 +83,27 @@ void freeI18NMessages(LauncherProperties *props) {
   }
 }
 
-char *searchA(const char *wcs1, const char *wcs2) {
-  char *cp = (char *)wcs1;
-  char *s1, *s2;
+TCHAR *search(LPCTSTR wcs1, LPCTSTR wcs2) {
+  TCHAR *cp = (TCHAR *)wcs1;
+  TCHAR *s1, *s2;
 
   if (!*wcs2) {
-    return (char *)wcs1;
+    return (TCHAR *)wcs1;
   }
 
   while (*cp) {
     s1 = cp;
-    s2 = (char *)wcs2;
+    s2 = (TCHAR *)wcs2;
 
     while (*s1 && *s2 && !(*s1 - *s2)) {
       s1++, s2++;
     }
     if (!*s2) {
-      return (cp);
+      return cp;
     }
     cp++;
   }
-  return (NULL);
-}
-
-WCHAR *searchW(const WCHAR *wcs1, const WCHAR *wcs2) {
-  WCHAR *cp = (WCHAR *)wcs1;
-  WCHAR *s1, *s2;
-
-  if (!*wcs2) {
-    return (WCHAR *)wcs1;
-  }
-
-  while (*cp) {
-    s1 = cp;
-    s2 = (WCHAR *)wcs2;
-
-    while (*s1 && *s2 && !(*s1 - *s2)) {
-      s1++, s2++;
-    }
-    if (!*s2) {
-      return (cp);
-    }
-    cp++;
-  }
-  return (NULL);
+  return NULL;
 }
 
 void getI18nPropertyTitleDetail(LauncherProperties *props, LPCTSTR name,
@@ -231,12 +208,12 @@ DWORD getLength(LPCTSTR message) {
   return (message != NULL) ? lstrlen(message) : 0;
 }
 
-// adds string the the initial string
-char *appendStringN(char *initial, DWORD initialLength, const char *addString,
-                    DWORD addStringLength) {
-  DWORD length = initialLength + addStringLength + 1;
+// adds string to the initial string which is freed
+LPTSTR appendStringN(LPTSTR initial, DWORD initialLength, LPCTSTR addString,
+                     DWORD addStringLength) {
+  DWORD length = initialLength + addStringLength;
   if (length > 1) {
-    char *tmp = newpChar(length + 1);
+    LPTSTR tmp = newpTCHAR(length + 1);
     DWORD i = 0;
     if (initialLength != 0) {
       for (i = 0; i < initialLength; i++) {
@@ -254,7 +231,7 @@ char *appendStringN(char *initial, DWORD initialLength, const char *addString,
   }
 }
 
-char *appendString(char *initial, const char *addString) {
+LPTSTR appendString(LPTSTR initial, LPCTSTR addString) {
   return appendStringN(initial, getLength(initial), addString,
                        getLength(addString));
 }
@@ -270,7 +247,7 @@ LPTSTR escapeString(LPCTSTR string) {
     result[r++] = TEXT('"');
   }
   for (i = 0; i < length; i++) {
-    const TCHAR c = string[i];
+    TCHAR c = string[i];
     switch (c) {
     case TEXT('\\'):
       bsCounter++;
@@ -374,11 +351,11 @@ char *long2charN(long value, int fillZeros) {
 
 char *long2char(long value) { return long2charN(value, 0); }
 
-char *word2charN(WORD value, int fillZeros) {
+LPTSTR word2charN(WORD value, int fillZeros) {
   int digits = 0;
   WORD tmpValue = value;
   int i = 0;
-  char *str;
+  LPTSTR str;
 
   do {
     digits++;
@@ -388,16 +365,17 @@ char *word2charN(WORD value, int fillZeros) {
   if (digits < fillZeros) {
     digits = fillZeros;
   }
-  str = (char *)LocalAlloc(LPTR, sizeof(char) * (digits + 1));
-  str[digits] = '\0';
+  str = newpTCHAR(digits + 1);
+  str[digits] = TEXT('\0');
   for (i = 0; i < digits; i++) {
-    str[digits - i - 1] = '0' + (char)(tmpValue - ((tmpValue / 10) * 10));
+    str[digits - i - 1] =
+        TEXT('0') + (TCHAR)(tmpValue - ((tmpValue / 10) * 10));
     tmpValue = tmpValue / 10;
   }
   return str;
 }
 
-char *word2char(WORD value) { return word2charN(value, 0); }
+LPTSTR word2char(WORD value) { return word2charN(value, 0); }
 
 LPTSTR int64ttoTCHAR(int64t *value) {
   if (value->High == 0) {
@@ -461,11 +439,11 @@ StringListEntry *splitStringToList(StringListEntry *top, LPCTSTR strlist,
   return top;
 }
 
-DWORD getLineSeparatorNumber(char *str) {
+DWORD getLineSeparatorNumber(LPCTSTR str) {
   DWORD result = 0;
-  char *ptr = str;
+  TCHAR *ptr = (TCHAR *)str;
   if (ptr != NULL) {
-    while ((ptr = searchA(ptr, "\n")) != NULL) {
+    while ((ptr = search(ptr, TEXT("\n"))) != NULL) {
       ptr++;
       result++;
       if (ptr == NULL)
@@ -516,54 +494,56 @@ char *createCHARN(SizedString *sz, DWORD maxlen) {
   return str;
 }
 WCHAR *createWCHAR(SizedString *sz) {
-  char *str = (char *)sz->bytes;
+  const BYTE *str = sz->bytes;
   DWORD len = sz->length;
   int unicodeFlags;
   DWORD i;
-  char *string = NULL;
-  char *ptr = NULL;
+  BYTE *string;
+  BYTE *ptr = NULL;
   WCHAR *wstr = NULL;
   if (str == NULL)
     return NULL;
-  // static DWORD excludeCodepages [] = { 50220, 50221, 50222, 50225, 50227,
-  // 50229, 52936, 54936, 57002,  57003, 57004, 57005, 57006, 57007, 57008,
-  // 57009, 57010, 57011, 65000, 42};
 
-  string = appendStringN(NULL, 0, str, len);
+  string = memcpy(newpChar(len + 1), str, len);
   ptr = string;
-  unicodeFlags = -1;
-  if (len >= 2) {
-    BOOL hasBOM = (*ptr == '\xFF' && *(ptr + 1) == '\xFE');
-    BOOL hasReverseBOM = (*ptr == '\xFE' && *(ptr + 1) == '\xFF');
 
-    if (IsTextUnicode(string, len, &unicodeFlags) || hasBOM || hasReverseBOM) {
-      // text is unicode
-      len -= 2;
-      ptr += 2;
-      if (unicodeFlags & IS_TEXT_UNICODE_REVERSE_SIGNATURE || hasReverseBOM) {
-        // we need to change bytes order
-        char c;
-        for (i = 0; i < len / 2; i++) {
-          c = ptr[2 * i];
-          ptr[2 * i] = ptr[2 * i + 1];
-          ptr[2 * i + 1] = c;
-        }
-      }
+  unicodeFlags = IS_TEXT_UNICODE_REVERSE_MASK | IS_TEXT_UNICODE_UNICODE_MASK;
+  IsTextUnicode(str, len, &unicodeFlags);
+
+  if (unicodeFlags &
+      (IS_TEXT_UNICODE_REVERSE_SIGNATURE | IS_TEXT_UNICODE_SIGNATURE)) {
+    // Has a BOM
+    len -= 2;
+    ptr += 2;
+  }
+  if (unicodeFlags & (IS_TEXT_UNICODE_REVERSE_STATISTICS |
+                      IS_TEXT_UNICODE_REVERSE_SIGNATURE)) {
+    // we need to change bytes order
+    for (i = 0; i < len; i += 2) {
+      BYTE c = ptr[i];
+      ptr[i] = ptr[i + 1];
+      ptr[i + 1] = c;
     }
   }
-  wstr = newpWCHAR(len / 2 + 1);
-
-  for (i = 0; i < len / 2; i++) {
-    ptr[2 * i] = (ptr[2 * i]) & 0xFF;
-    ptr[2 * i + 1] = (ptr[2 * i + 1]) & 0xFF;
-    wstr[i] =
-        ((unsigned char)ptr[2 * i]) + (((unsigned char)ptr[2 * i + 1]) << 8);
+  wstr = newpWCHAR(len + 1);
+  WCHAR *wptr = wstr;
+  if (unicodeFlags &
+      (IS_TEXT_UNICODE_REVERSE_STATISTICS | IS_TEXT_UNICODE_REVERSE_SIGNATURE |
+       IS_TEXT_UNICODE_REVERSE_SIGNATURE | IS_TEXT_UNICODE_SIGNATURE)) {
+    // Yes it really is unicode
+    for (i = 0; i < len; i += 2) {
+      *wptr++ = (ptr[i + 1] & 0xFF) << 8 | (ptr[i] & 0xFF);
+    }
+    *wptr = L'\0';
+  } else {
+    // TODO this all needs rethinking.
+    // Doesn't seem to be unicode
+      return toWCHARN((const char*) str, len);
   }
-
   FREE(string);
   return wstr;
 }
-WCHAR *toWCHARn(char *str, DWORD n) {
+WCHAR *toWCHARN(const char *str, DWORD n) {
   DWORD len = 0;
   DWORD length = 0;
   WCHAR *wstr = NULL;
@@ -581,8 +561,8 @@ WCHAR *toWCHARn(char *str, DWORD n) {
   return wstr;
 }
 
-WCHAR *toWCHAR(char *string) {
-  return string ? toWCHARn(string, strlen(string)) : NULL;
+WCHAR *toWCHAR(const char *string) {
+  return string ? toWCHARN(string, strlen(string)) : NULL;
 }
 
 SizedString *createSizedString() {
@@ -742,7 +722,7 @@ LPTSTR getErrorDescription(DWORD dw) {
   return lpDisplayBuf;
 }
 
-LPTSTR formatMessage(LPCSTR message, const DWORD varArgsNumber, ...) {
+LPTSTR formatMessage(LPCTSTR message, const DWORD varArgsNumber, ...) {
   DWORD totalLength = getLength(message);
   DWORD counter = 0;
   LPTSTR result = NULL;
@@ -764,3 +744,5 @@ LPTSTR formatMessage(LPCSTR message, const DWORD varArgsNumber, ...) {
 }
 
 DWORD isOK(LauncherProperties *props) { return (props->status == ERROR_OK); }
+
+LPTSTR copyString(LPCTSTR s) { return appendString(NULL, s); }

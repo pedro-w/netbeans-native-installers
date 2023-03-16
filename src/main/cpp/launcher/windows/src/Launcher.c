@@ -231,7 +231,7 @@ void trySetCompatibleJava(LPCTSTR location, LauncherProperties *props) {
 
     if (inList(props->alreadyCheckedJava, location)) {
       writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
-                   "... already checked location ", 0);
+                   TEXT("... already checked location "), 0);
       writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, location, 1);
       // return here and don`t proceed with private jre checking since it`s
       // already checked as well
@@ -244,23 +244,24 @@ void trySetCompatibleJava(LPCTSTR location, LauncherProperties *props) {
     getJavaProperties(location, props, &javaProps);
 
     if (isOK(props)) {
-      writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "... some java at ", 0);
+      writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("... some java at "), 0);
       writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, location, 1);
       // some java there, check compatibility
       writeMessage(props, OUTPUT_LEVEL_NORMAL, 0,
-                   "... checking compatibility of java : ", 0);
+                   TEXT("... checking compatibility of java : "), 0);
       writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, javaProps->javaHome, 1);
       if (isJavaCompatible(javaProps, props->compatibleJava,
                            props->compatibleJavaNumber)) {
-        writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "... compatible", 1);
+        writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("... compatible"), 1);
         props->java = javaProps;
       } else {
         props->status = ERROR_JVM_UNCOMPATIBLE;
-        writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "... uncompatible", 1);
+        writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("... uncompatible"),
+                     1);
         freeJavaProperties(&javaProps);
       }
     } else {
-      writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, "... no java at ", 0);
+      writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, TEXT("... no java at "), 0);
       writeMessage(props, OUTPUT_LEVEL_NORMAL, 0, location, 1);
       if (props->status == ERROR_INPUTOUPUT) {
         props->status = ERROR_JVM_NOT_FOUND;
@@ -322,8 +323,8 @@ void resolveTestJVM(LauncherProperties *props) {
   writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, props->testJVMFile->resolved, 1);
 
   if (isDirectory(testJVMFile)) { // the directory of the class file is set
-    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, "... testJVM is : directory ",
-                 1);
+    writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
+                 TEXT("... testJVM is : directory "), 1);
     testJVMClassPath = appendString(NULL, testJVMFile);
   } else { // testJVMFile is either .class file or .jar/.zip file with the
            // neccessary class file
@@ -333,7 +334,7 @@ void resolveTestJVM(LauncherProperties *props) {
       ptr = search(ptr, CLASS_SUFFIX); // check if ptr contains .class
       if (ptr == NULL) {               // .jar or .zip file
         writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
-                     "... testJVM is : ZIP/JAR file", 1);
+                     TEXT("... testJVM is : ZIP/JAR file"), 1);
         testJVMClassPath = appendString(NULL, testJVMFile);
         break;
       }
@@ -419,7 +420,7 @@ void findSuitableJava(LauncherProperties *props) {
   }
   return;
 }
-
+/* Modify the string in-place to replace '$P{...}' expansions */
 void resolveLauncherStringProperty(LauncherProperties *props, LPTSTR *result) {
   if (*result != NULL) {
     LPTSTR propStart = search(*result, TEXT("$P{"));
@@ -452,6 +453,7 @@ void resolveLauncherStringProperty(LauncherProperties *props, LPTSTR *result) {
   }
 }
 
+/* Modify the string in-place to replace '$L{...}' expansions */
 void resolveLauncherProperties(LauncherProperties *props, LPTSTR *result) {
   if (*result != NULL) {
     LPTSTR propStart = search(*result, TEXT("$L{"));
@@ -491,7 +493,7 @@ void resolveLauncherProperties(LauncherProperties *props, LPTSTR *result) {
     }
   }
 }
-
+/* Modify the string in-place to replace all variable expansions */
 void resolveString(LauncherProperties *props, LPTSTR *result) {
   LPTSTR tmp = NULL;
 
@@ -500,14 +502,8 @@ void resolveString(LauncherProperties *props, LPTSTR *result) {
   do {
     FREE(tmp);
     tmp = appendString(NULL, *result);
-    // writeMessageA(props, OUTPUT_LEVEL_DEBUG, 0, "... step 1 : ", 0);
-    // writeMessageW(props, OUTPUT_LEVEL_DEBUG, 0, *result, 1);
     resolveLauncherProperties(props, result);
-    // writeMessageA(props, OUTPUT_LEVEL_DEBUG, 0, "... step 2 : ", 0);
-    // writeMessageW(props, OUTPUT_LEVEL_DEBUG, 0, *result, 1);
     resolveLauncherStringProperty(props, result);
-    // writeMessageA(props, OUTPUT_LEVEL_DEBUG, 0, "... step 3 : ", 0);
-    // writeMessageW(props, OUTPUT_LEVEL_DEBUG, 0, *result, 1);
   } while (lstrcmp(tmp, *result) != 0);
 
   FREE(tmp);
@@ -590,14 +586,16 @@ void setClasspathElements(LauncherProperties *props) {
     writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("... finished"), 1);
   }
 }
-
+/* Split the commandLine args into application and java args and
+   add them to the appropriate lists */
 void setAdditionalArguments(LauncherProperties *props) {
   if (isOK(props)) {
     TCHARList *cmd = props->commandLine;
     LPTSTR *javaArgs;
     LPTSTR *appArgs;
     DWORD i = 0;
-    DWORD jArg = 0; // java arguments number
+    DWORD jArg =
+        2; // java arguments number, start from 2 because we add 2 extra
     DWORD aArg = 0; // app arguments number
 
     writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
@@ -617,75 +615,61 @@ void setAdditionalArguments(LauncherProperties *props) {
     }
 
     // handle DefaultUserDirRoot, DefaultCacheDirRoot - increasing array size
-    jArg = jArg + 2;
 
-    // fill the array
-    if (jArg > 0) {
-      int size = jArg + props->jvmArguments->size;
-      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, DWORDtoTCHAR(size), 1);
-      javaArgs = newppTCHAR(jArg + props->jvmArguments->size);
-      for (i = 0; i < props->jvmArguments->size; i++) {
-        javaArgs[i] = props->jvmArguments->items[i];
-      }
-      FREE(props->jvmArguments->items);
-
-      // cont. handle DefaultUserDirRoot, DefaultCacheDirRoot
-      // * add -Dnetbeans.default_userdir_root
-      // * add -Dnetbeans.default_cachedir_root
-      javaArgs[i - 2] = appendString("-Dnetbeans.default_userdir_root=",
-                                     props->defaultUserDirRoot);
-      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
-                   TEXT("Added an JVM argument: "), 0);
-      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, javaArgs[i - 2], 1);
-
-      javaArgs[i - 1] = appendString("-Dnetbeans.default_cachedir_root=",
-                                     props->defaultCacheDirRoot);
-      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
-                   TEXT("Added an JVM argument: "), 0);
-      writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, javaArgs[i - 1], 1);
-    } else {
-      javaArgs = NULL;
+    // move across the jvmArguments into the javaArgs array
+    int size = jArg + props->jvmArguments->size;
+    LPTSTR *ptr = javaArgs = newppTCHAR(size);
+    for (i = 0; i < props->jvmArguments->size; i++) {
+      *ptr++ = props->jvmArguments->items[i];
+      props->jvmArguments->items[i] = NULL;
     }
 
-    if (aArg > 0) {
-      appArgs = newppTCHAR(aArg + props->appArguments->size);
-      for (i = 0; i < props->appArguments->size; i++) {
-        appArgs[i] = props->appArguments->items[i];
-      }
-      FREE(props->appArguments->items);
-    } else {
-      appArgs = NULL;
-    }
-    jArg = aArg = 0;
-
+    // cont. handle DefaultUserDirRoot, DefaultCacheDirRoot
+    // * add -Dnetbeans.default_userdir_root
+    // * add -Dnetbeans.default_cachedir_root
+    *ptr++ = appendString(
+        appendString(NULL, TEXT("-Dnetbeans.default_userdir_root=")),
+        props->defaultUserDirRoot);
+    *ptr++ = appendString(
+        appendString(NULL, TEXT("-Dnetbeans.default_cachedir_root=")),
+        props->defaultCacheDirRoot);
     for (i = 0; i < cmd->size; i++) {
-      if (cmd->items[i] != NULL) {
-        if (search(cmd->items[i], javaParameterPrefix) != NULL) {
-          javaArgs[props->jvmArguments->size + jArg] = appendString(
-              NULL, cmd->items[i] + getLength(javaParameterPrefix));
-          writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
-                       TEXT("... adding JVM argument : "), 0);
-          writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
-                       javaArgs[props->jvmArguments->size + jArg], 1);
-          jArg++;
-        } else {
-          appArgs[props->appArguments->size + aArg] =
-              appendString(NULL, cmd->items[i]);
-          writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
-                       TEXT("... adding APP argument : "), 0);
-          writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
-                       appArgs[props->appArguments->size + aArg], 1);
-          aArg++;
-        }
+      if (cmd->items[i] != NULL &&
+          search(cmd->items[i], javaParameterPrefix) != NULL) {
+        *ptr =
+            appendString(NULL, cmd->items[i] + getLength(javaParameterPrefix));
+        writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
+                     TEXT("... adding JVM argument : "), 0);
+        writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, *ptr, 1);
+        ++ptr;
         FREE(cmd->items[i]);
       }
     }
-    props->appArguments->size = props->appArguments->size + aArg;
-    props->jvmArguments->size = props->jvmArguments->size + jArg;
-    if (props->jvmArguments->items == NULL)
-      props->jvmArguments->items = javaArgs;
-    if (props->appArguments->items == NULL)
-      props->appArguments->items = appArgs;
+    FREE(props->jvmArguments->items);
+    props->jvmArguments->items = javaArgs;
+    props->jvmArguments->size = ptr - javaArgs;
+
+    size = props->appArguments->size + aArg;
+    ptr = appArgs = newppTCHAR(size);
+    for (i = 0; i < props->appArguments->size; i++) {
+      *ptr++ = props->appArguments->items[i];
+      props->appArguments->items[i] = 0;
+    }
+
+    for (i = 0; i < cmd->size; i++) {
+      if (cmd->items[i] != NULL) {
+        *ptr = appendString(NULL, cmd->items[i]);
+        writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
+                     TEXT("... adding APP argument : "), 0);
+        writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, *ptr, 1);
+        FREE(cmd->items[i]);
+        ++ptr;
+      }
+    }
+    FREE(props->appArguments->items);
+    props->appArguments->items = appArgs;
+    props->appArguments->size = ptr - appArgs;
+
     writeMessage(props, OUTPUT_LEVEL_DEBUG, 0,
                  TEXT("... resolving jvm arguments"), 1);
     for (i = 0; i < props->jvmArguments->size; i++) {
@@ -750,7 +734,8 @@ void executeMainClass(LauncherProperties *props) {
       HANDLE hErrorRead;
       HANDLE hErrorWrite;
       LPTSTR error = NULL;
-
+      // TODO we need to intercept props->stdoutHandle and convert ANSI from
+      // the child process into TCHARs. (may be no-op if not in UNICODE mode)
       CreatePipe(&hErrorRead, &hErrorWrite, NULL, 0);
       hideLauncherWindows(props);
       executeCommand(props, props->command, NULL, INFINITE, props->stdoutHandle,
@@ -1023,11 +1008,11 @@ void freeLauncherProperties(LauncherProperties **props) {
   return;
 }
 void printStatus(LauncherProperties *props) {
-  char *s = DWORDtoCHAR(props->status);
+  LPTSTR s = DWORDtoTCHAR(props->status);
   writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("... EXIT status : "), 0);
   writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, s, 1);
   FREE(s);
-  s = DWORDtoCHAR(props->exitCode);
+  s = DWORDtoTCHAR(props->exitCode);
   writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, TEXT("... EXIT code : "), 0);
   writeMessage(props, OUTPUT_LEVEL_DEBUG, 0, s, 1);
   FREE(s);

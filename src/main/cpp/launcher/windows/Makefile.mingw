@@ -25,6 +25,7 @@ CFLAGS=-Os -s -DARCHITECTURE=64 -W -Wall -Wl,--nxcompat -Wl,--dynamicbase \
 LDFLAGS=-static -static-libstdc++ -static-libgcc
 LDLIBS=-lstdc++ -lcomctl32 -luserenv
 
+CFLAGS+=-DUNICODE
 SRCS=src/Main.c src/Launcher.c src/ExtractUtils.c src/FileUtils.c \
      src/SystemUtils.c src/RegistryUtils.c src/ProcessUtils.c \
      src/JavaUtils.c src/StringUtils.c
@@ -40,7 +41,7 @@ prepfolder:
 	mkdir -p $(OFLD)
 
 clean:
-	rm -f *.res *.exe *.dll
+	rm -f $(TMPFLD)nlw.res $(OFLD)nlw.exe
 
 $(TMPFLD)nlw.res: resources/res.rc
 	$(RC) -o$@ -Ocoff $<
